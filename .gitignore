@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+.env
+.flaskenv
+
+# IDEs et éditeurs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Environnements virtuels
+venv/
+ENV/
+.venv
+.env
+
+# Logs et bases de données
+*.log
+*.sqlite
+*.db
+
+# Fichiers de configuration locaux
+config.py
+settings.local.py
+
+# Dossiers de médias et fichiers uploadés
+uploads/
+media/
+
+# Fichiers de dépendances
+requirements.txt.lock
+pip-log.txt
