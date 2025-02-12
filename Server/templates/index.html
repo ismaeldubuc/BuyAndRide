@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Utilisateur</title>
+</head>
+<body>
+    <h2>Gestion des utilisateurs</h2>
+
+    <div id="message"></div>
+
+    <!-- Formulaire de Connexion -->
+    <h3>Connexion</h3>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Mot de passe">
+    <button onclick="login()">Se connecter</button>
+
+    <!-- Formulaire d'Inscription -->
+    <h3>Inscription</h3>
+    <input type="text" id="registerNom" placeholder="Nom">
+    <input type="text" id="registerPrenom" placeholder="Prénom">
+    <input type="email" id="registerEmail" placeholder="Email">
+    <input type="password" id="registerPassword" placeholder="Mot de passe">
+    <button onclick="register()">S'inscrire</button>
+
+    <!-- Formulaire de Mise à Jour -->
+    <h3>Modifier Profil</h3>
+    <input type="text" id="updateNom" disabled>
+    <input type="text" id="updatePrenom" disabled>
+    <input type="email" id="updateEmail" disabled>
+    <input type="password" id="updatePassword" placeholder="Nouveau Mot de Passe" disabled>
+    <button id="editBtn" onclick="enableEdit()">Modifier mon profil</button>
+    <button id="saveBtn" onclick="updateProfile()" style="display:none;">Enregistrer les modifications</button>
+
+    <script>
+        let currentUser = null;
+
+        function showMessage(message) {
+            document.getElementById('message').innerText = message;
+        }
+
+        async function login() {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPassword').value
+                })
+            });
+
+            const result = await response.json();
+            showMessage(result.message);
+
+            if (response.ok) {
+                localStorage.setItem('access_token', result.access_token); // Stockage du token
+                currentUser = result.user;
+                window.location.href = '/update';  // Redirection vers la page de mise à jour
+            }
+        }
+
+        async function register() {
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nom: document.getElementById('registerNom').value,
+                    prenom: document.getElementById('registerPrenom').value,
+                    email: document.getElementById('registerEmail').value,
+                    password: document.getElementById('registerPassword').value
+                })
+            });
+
+            const result = await response.json();
+            showMessage(result.message);
+
+            if (response.ok) {
+                window.location.href = '/login';  // Redirection vers la page de connexion après inscription réussie
+            }
+        }
+
+        async function loadUserData() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                showMessage('Erreur : Vous devez être connecté pour accéder à cette page.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/get_user', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    currentUser = result.user;
+                    document.getElementById('updateNom').value = currentUser.nom;
+                    document.getElementById('updatePrenom').value = currentUser.prenom;
+                    document.getElementById('updateEmail').value = currentUser.email;
+                } else {
+                    showMessage(result.message);
+                }
+            } catch (error) {
+                showMessage('Une erreur est survenue lors du chargement des données utilisateur.');
+            }
+        }
+
+        function enableEdit() {
+            document.getElementById('updateNom').disabled = false;
+            document.getElementById('updatePrenom').disabled = false;
+            document.getElementById('updatePassword').disabled = false;
+
+            document.getElementById('editBtn').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'inline-block';
+        }
+
+        async function updateProfile() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                showMessage('Erreur : Vous devez être connecté pour mettre à jour votre profil.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/update', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        nom: document.getElementById('updateNom').value,
+                        prenom: document.getElementById('updatePrenom').value,
+                        email: document.getElementById('updateEmail').value,
+                        password: document.getElementById('updatePassword').value
+                    })
+                });
+
+                const result = await response.json(); // Essaye de parser la réponse JSON
+
+                if (response.ok) {
+                    showMessage(result.message);
+                    currentUser.nom = document.getElementById('updateNom').value;
+                    currentUser.prenom = document.getElementById('updatePrenom').value;
+                    document.getElementById('updateNom').disabled = true;
+                    document.getElementById('updatePrenom').disabled = true;
+                    document.getElementById('updatePassword').disabled = true;
+                    document.getElementById('editBtn').style.display = 'inline-block';
+                    document.getElementById('saveBtn').style.display = 'none';
+                } else {
+                    showMessage(result.message); // Affiche l'erreur si la réponse est incorrecte
+                }
+            } catch (error) {
+                showMessage('Une erreur est survenue lors de la mise à jour.');
+            }
+        }
+
+        // Si la page de mise à jour est chargée, on charge les informations de l'utilisateur
+        if (window.location.pathname === '/update') {
+            loadUserData();
+        }
+    </script>
+</body>
+</html>
