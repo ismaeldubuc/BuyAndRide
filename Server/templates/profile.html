@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Profil</h1>
+    <form method="POST">
+        <input type="text" name="nom" value="{{ user.nom }}" required><br>
+        <input type="text" name="prenom" value="{{ user.prenom }}" required><br>
+        <input type="email" name="email" value="{{ user.email }}" required><br>
+        <button type="submit">Mettre à jour</button>
+    </form>
+
+    <h2>Changer le mot de passe</h2>
+    <form method="POST">
+        <input type="password" name="new_password" placeholder="Nouveau mot de passe" required><br>
+        <input type="password" name="confirm_password" placeholder="Confirmer le nouveau mot de passe" required><br>
+        <input type="hidden" name="changer_mdp" value="1">
+        <button type="submit">Changer le mot de passe</button>
+    </form>
+
+    <a href="/logout">Se déconnecter</a>
+</body>
+</html> 
+
+
+
+
+
+
+
+
