@@ -24,8 +24,8 @@ def create_vehicle():
 
     try:
         query = """
-            INSERT INTO vehicules (marque, modele, prix, km, energie, photo1, photo2, photo3, photo4, photo5, description)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO vehicules (marque, modele, prix, km, energie, photo1, photo2, photo3, photo4, photo5, etat, description)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         values = (
             data.get('marque'),
@@ -38,6 +38,7 @@ def create_vehicle():
             data.get('photo3'),
             data.get('photo4'),
             data.get('photo5'),
+            data.get('etat'),
             data.get('description')
         )
 
@@ -65,8 +66,8 @@ def update_vehicle():
         query = """
             UPDATE vehicules 
             SET marque = %s, modele = %s, prix = %s, km = %s, 
-                energie = %s, type = %s, photo1 = %s, photo2 = %s,
-                photo3 = %s, photo4 = %s, photo5 = %s, description = %s
+                energie = %s, photo1 = %s, photo2 = %s,
+                photo3 = %s, photo4 = %s, photo5 = %s, etat = %s, description = %s
             WHERE id = %s
         """
         values = (
@@ -80,6 +81,7 @@ def update_vehicle():
             data.get('photo3'),
             data.get('photo4'),
             data.get('photo5'),
+            data.get('etat'),
             data.get('description'),
             vehicle_id
         )
