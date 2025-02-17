@@ -5,7 +5,7 @@ import Register from "./components/Register";
 import Login from "./components/login";
 import Profile from "./components/Profile";
 import GenerationDevis from "./components/GenerationDevis";
-import AddVehicule from "../../../aide/AddVehicule";
+import AddVehicule from "./components/AddVehicule";
 import ListVehicules from "./components/ListVehicules";
 import DetailVehicule from "./components/DetailVehicule";
 

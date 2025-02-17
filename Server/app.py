@@ -105,7 +105,16 @@ def get_vehicule_route(id):
   return get_vehicule(id)
 
 
+@app.route('/static/uploads/<path:filename>')
+def serve_image(filename):
+    return send_from_directory('static/uploads', filename)
 
+
+
+
+@app.route('/vehicules', methods=['POST'])
+def add_vehicule_route():
+   return add_vehicule()
 
 if __name__ == '__main__':
     app.run(debug=True)
