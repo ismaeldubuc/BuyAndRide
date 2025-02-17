@@ -8,7 +8,7 @@ export default function DetailVehicule() {
   const { id } = useParams();
   const [vehicule, setVehicule] = useState(null);
 
-  const [erreur, setErreur] = useState(null); 
+  const [erreur, setErreur] = useState(null);
   useEffect(() => {
     const fetchVehicule = async () => {
       try {
@@ -17,7 +17,7 @@ export default function DetailVehicule() {
         );
         console.log("Données reçues:", response.data);
         setVehicule(response.data);
-        setErreur(null); 
+        setErreur(null);
       } catch (error) {
         if (axios.isAxiosError(error)) {
           console.error("Erreur Axios:", error.message);
@@ -26,21 +26,18 @@ export default function DetailVehicule() {
           console.error("Erreur inconnue:", error);
           setErreur("Erreur inconnue");
         }
-        setVehicule(null); 
+        setVehicule(null);
       }
     };
     fetchVehicule();
   }, [id]);
 
-
-
-const generatePDF = () => {
+  const generatePDF = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Détails du véhicule", 105, 15, { align: "center" });
-  
-    
+
     autoTable(doc, {
       startY: 25,
       head: [["Champ", "Valeur"]],
@@ -55,7 +52,6 @@ const generatePDF = () => {
       theme: "striped",
       headStyles: { fillColor: [41, 128, 185] },
     });
-  
 
     doc.setFontSize(14);
     doc.text("Description :", 15, doc.lastAutoTable.finalY + 10);
@@ -63,10 +59,9 @@ const generatePDF = () => {
     doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
       maxWidth: 180,
     });
-  
+
     let yPosition = doc.lastAutoTable.finalY + 40;
-  
-   
+
     const promises = [];
     const images = [
       `http://localhost:8000/static/${vehicule.photo1}`,
@@ -75,11 +70,11 @@ const generatePDF = () => {
       `http://localhost:8000/static/${vehicule.photo4}`,
       `http://localhost:8000/static/${vehicule.photo5}`,
     ];
-  
+
     images.forEach((image, index) => {
       if (image) {
         promises.push(
-          new Promise((resolve) => { 
+          new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.onload = () => {
@@ -90,33 +85,36 @@ const generatePDF = () => {
               }
               doc.addImage(img, "JPEG", 15, yPosition, 60, 40);
               yPosition += 50;
-              resolve({ status: 'fulfilled', value: img }); 
+              resolve({ status: "fulfilled", value: img });
             };
             img.onerror = () => {
               console.error(`Erreur de chargement de l'image ${index + 1}`);
-              resolve({ status: 'rejected', reason: `Erreur de chargement de l'image ${index + 1}` });
+              resolve({
+                status: "rejected",
+                reason: `Erreur de chargement de l'image ${index + 1}`,
+              });
             };
             img.src = image;
           })
         );
       }
     });
-  
- 
-    Promise.allSettled(promises) 
-      .then((results) => {
-        console.log("Toutes les promesses sont réglées :", results);
-        results.forEach((result, index) => {
-          if (result.status === 'fulfilled' && result.value) {
-            
-          } else {
-            console.error(`Image ${index + 1} n'a pas pu être chargée :`, result.reason);
-          }
-        });
-        doc.save(`voiture_details.pdf`); 
+
+    Promise.allSettled(promises).then((results) => {
+      console.log("Toutes les promesses sont réglées :", results);
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled" && result.value) {
+        } else {
+          console.error(
+            `Image ${index + 1} n'a pas pu être chargée :`,
+            result.reason
+          );
+        }
       });
+      doc.save(`voiture_details.pdf`);
+    });
   };
-  
+
   if (!vehicule) return <div>Chargement...</div>;
 
   return (
