@@ -9,6 +9,7 @@ import ListVehicules from "./components/ListVehicules";
 import DetailVehicule from "./components/DetailVehicule";
 import Annonce from "./components/Annonce";
 import Accueil from "./components/Accueil";
+import Acheter from "./components/Acheter";
 
 export default function MesRoutes() {
   return (
