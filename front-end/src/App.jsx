@@ -8,14 +8,17 @@ import { SiMitsubishi } from "react-icons/si";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Login from "./components/login";
-import Register from "./components/Register";
+import React from 'react';
+
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import VehicleDetails from './components/VehicleDetails';
+import Layout from './components/layout';
+import MesRoutes from './MesRoutes';
 
 function App() {
-  return (
-    <>
-      <Register/>
-    </>
-  );
+    return (
+        <MesRoutes />
+    );
 }
 
 export default App;
