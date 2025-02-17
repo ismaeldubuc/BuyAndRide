@@ -9,11 +9,13 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import Login from "./components/login";
 import Register from "./components/Register";
+import Annonce from "./components/Annonce";
 
 function App() {
   return (
     <>
-      <Register/>
+      <Register />
+      <Annonce />
     </>
   );
 }
