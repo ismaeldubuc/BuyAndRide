@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS vehicules (
     photo3 VARCHAR(255), 
     photo4 VARCHAR(255),
     photo5 VARCHAR(255),
+    etat VARCHAR(255),
     description VARCHAR(255)
 );
 
