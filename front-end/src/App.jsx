@@ -6,8 +6,7 @@ import Annonce from "./components/Annonce";
 function App() {
   return (
     <>
-      <Register />
-      <Annonce />
+      <MesRoutes />
     </>
   );
 }
