@@ -27,9 +27,12 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("http://localhost:5000/profile", {
+        const response = await fetch("http://localhost:8000/profile", {
           method: "GET",
           credentials: "include",
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
 
         const data = await response.json();
@@ -38,7 +41,8 @@ function Profile() {
         } else {
           setError(data.error || "Impossible de récupérer les informations.");
         }
-      } catch (error) {
+      } catch (response) {
+        console.log(response.headers);
         setError("Erreur serveur.");
       }
     };
@@ -68,7 +72,7 @@ function Profile() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/profile", {
+      const response = await fetch("http://localhost:8000/profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -100,7 +104,7 @@ function Profile() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/profile", {
+      const response = await fetch("http://localhost:8000/profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -128,7 +132,7 @@ function Profile() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:5000/logout", {
+      const response = await fetch("http://localhost:8000/logout", {
         method: "POST",
         credentials: "include",
       });

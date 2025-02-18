@@ -13,7 +13,7 @@ export default function DetailVehicule() {
     const fetchVehicule = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/vehicules/${id}`
+          `http://localhost:8000/vehicules/${id}`
         );
         console.log("Données reçues:", response.data);
         setVehicule(response.data);
@@ -69,11 +69,11 @@ const generatePDF = () => {
    
     const promises = [];
     const images = [
-      `http://localhost:5000/static/${vehicule.photo1}`,
-      `http://localhost:5000/static/${vehicule.photo2}`,
-      `http://localhost:5000/static/${vehicule.photo3}`,
-      `http://localhost:5000/static/${vehicule.photo4}`,
-      `http://localhost:5000/static/${vehicule.photo5}`,
+      `http://localhost:8000/static/${vehicule.photo1}`,
+      `http://localhost:8000/static/${vehicule.photo2}`,
+      `http://localhost:8000/static/${vehicule.photo3}`,
+      `http://localhost:8000/static/${vehicule.photo4}`,
+      `http://localhost:8000/static/${vehicule.photo5}`,
     ];
   
     images.forEach((image, index) => {
@@ -127,7 +127,7 @@ const generatePDF = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <img
-            src={`http://localhost:5000/static/${vehicule.photo1}`}
+            src={`http://localhost:8000/static/${vehicule.photo1}`}
             alt={`${vehicule.marque} ${vehicule.modele}`}
             className="w-full rounded-lg"
           />
@@ -137,7 +137,7 @@ const generatePDF = () => {
                 vehicule[`photo${num}`] && (
                   <img
                     key={num}
-                    src={`http://localhost:5000/static/${
+                    src={`http://localhost:8000/static/${
                       vehicule[`photo${num}`]
                     }`}
                     alt={`Vue ${num}`}

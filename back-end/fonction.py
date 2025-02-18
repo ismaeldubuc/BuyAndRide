@@ -1,26 +1,38 @@
-from flask import Flask, request, jsonify
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask import Flask, request, jsonify, session
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required,get_jwt_identity
+from flask_bcrypt import Bcrypt
+from werkzeug.utils import secure_filename
 import mysql.connector
 import os
+from dotenv import load_dotenv
+from flask_cors import CORS
 
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'buyandride'  
+bcrypt = Bcrypt(app)
+
+CORS(app, 
+     resources={r"/*": {
+         "origins": "http://localhost:5173/",  # Votre URL frontend
+         "supports_credentials": True,         
+         "methods": ["GET", "POST", "OPTIONS","PUT","DELETE"],
+         "allow_headers": ["Content-Type", "Authorization"]
+     }})
 
 
-def get_db_connection():
-    mysql_conn = mysql.connector.connect(
-        host=os.getenv('MYSQL_HOST'),
-        user=os.getenv('MYSQL_USER'),
-        password=os.getenv('MYSQL_PASSWORD'),
-        database=os.getenv('MYSQL_DB')
-    )
-    return mysql_conn
+db = mysql.connector.connect(
+    host=os.getenv('MYSQL_HOST'),
+    user=os.getenv('MYSQL_USER'),
+    password=os.getenv('MYSQL_PASSWORD'),
+    database=os.getenv('MYSQL_DB')
+)
 
 def create_vehicle():
     data = request.json
-    mysql_conn = get_db_connection()
-    cursor = mysql_conn.cursor()
+    cursor = db.cursor()
 
     try:
         query = """
@@ -42,9 +54,8 @@ def create_vehicle():
             data.get('description')
         )
 
-        # Exécution de la requête
         cursor.execute(query, values)
-        mysql_conn.commit()
+        db.commit()
 
         return jsonify({"message": "Vehicle created successfully", "id": cursor.lastrowid}), 201
 
@@ -53,14 +64,12 @@ def create_vehicle():
 
     finally:
         cursor.close()
-        mysql_conn.close()
 
 def update_vehicle():
     data = request.json
     vehicle_id = data.get('id')
     
-    mysql_conn = get_db_connection()
-    cursor = mysql_conn.cursor()
+    cursor = db.cursor()
 
     try:
         query = """
@@ -87,7 +96,7 @@ def update_vehicle():
         )
 
         cursor.execute(query, values)
-        mysql_conn.commit()
+        db.commit()
 
         if cursor.rowcount == 0:
             return jsonify({"error": "Vehicle not found"}), 404
@@ -99,19 +108,17 @@ def update_vehicle():
 
     finally:
         cursor.close()
-        mysql_conn.close()
 
 def delete_vehicle():
     data = request.json
     vehicle_id = data.get('id')
 
-    mysql_conn = get_db_connection()
-    cursor = mysql_conn.cursor()
+    cursor = db.cursor()
 
     try:
         query = "DELETE FROM vehicules WHERE id = %s"
         cursor.execute(query, (vehicle_id,))
-        mysql_conn.commit()
+        db.commit()
 
         if cursor.rowcount == 0:
             return jsonify({"error": "Vehicle not found"}), 404
@@ -123,11 +130,9 @@ def delete_vehicle():
 
     finally:
         cursor.close()
-        mysql_conn.close()
 
 def get_vehicle():
-    mysql_conn = get_db_connection()
-    cursor = mysql_conn.cursor(dictionary=True)
+    cursor = db.cursor(dictionary=True)
 
     try:
         query = """
@@ -144,5 +149,157 @@ def get_vehicle():
 
     finally:
         cursor.close()
-        mysql_conn.close()
 
+def register():
+    if request.method == 'POST':
+        data = request.json
+        nom = data.get('nom')
+        prenom = data.get('prenom')
+        email = data.get('email')
+        password = bcrypt.generate_password_hash(data.get('password')).decode('utf-8')
+
+        cursor = db.cursor()
+        try:
+            cursor.execute("INSERT INTO users (nom, prenom, email, password) VALUES (%s, %s, %s, %s)", (nom, prenom, email, password))
+            db.commit()
+            return jsonify({"message": "Inscription réussie"}), 201  # Retourner une réponse JSON
+        except mysql.connector.Error as err:
+            return jsonify({"error": f"Erreur : {err}"}), 400
+
+def login():
+    data = request.get_json()  # Récupérer le JSON envoyé par le frontend
+    email = data.get('email')
+    password = data.get('password')
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+    user = cursor.fetchone()
+
+    if user and bcrypt.check_password_hash(user['password'], password):
+        
+        session['user_id'] = user['id']
+        return jsonify({"message": "Connexion réussie"}), 200  # ✅ Retourne un JSON
+
+    return jsonify({"message": "Identifiants incorrects"}), 401  # ✅ Retourne un JSON pour le frontend
+
+def profile():
+    """ Route pour afficher et modifier les informations de l'utilisateur """
+    if 'user_id' not in session:
+        return jsonify({"error": "Utilisateur non authentifié"}), 401
+    
+    cursor = db.cursor(dictionary=True)
+    
+    if request.method == 'GET':
+        cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (session['user_id'],))
+        user = cursor.fetchone()
+        return jsonify(user)
+    if request.method == 'POST':
+        if 'changer_mdp' in request.form:
+            # Changement de mot de passe
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+
+            if new_password != confirm_password:
+                return jsonify({"error": "Les mots de passe ne correspondent pas"}), 400
+
+            new_password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
+            cursor.execute("UPDATE users SET password = %s WHERE id = %s", (new_password_hash, session['user_id']))
+            db.commit()
+            return jsonify({"message": "Mot de passe mis à jour avec succès"}), 200
+
+        else:
+            # Modification des infos du profil
+            nom = request.form.get('nom')
+            prenom = request.form.get('prenom')
+            email = request.form.get('email')
+
+            cursor.execute("UPDATE users SET nom=%s, prenom=%s, email=%s WHERE id=%s", (nom, prenom, email, session['user_id']))
+            db.commit()
+            return jsonify({"message": "Profil mis à jour avec succès"}), 200
+
+def logout():
+    session.pop('user_id', None)  # Supprime l'utilisateur de la session
+    return jsonify({"message": "Déconnexion réussie"}), 200
+
+def list_vehicules():
+    # Vérifie si l'utilisateur est connecté
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    try:
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM vehicules WHERE user_id = %s", (session['user_id'],))
+        vehicules = cursor.fetchall()
+        return jsonify(vehicules)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def add_vehicule():
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentication required"}), 401
+
+    try:
+        data = {
+            'user_id': session['user_id'],
+            'marque': request.form.get('marque'),
+            'modele': request.form.get('modele'),
+            'prix': request.form.get('prix'),
+            'kilometrage': request.form.get('kilometrage'),
+            'energie': request.form.get('energie'),
+            'type': request.form.get('type'),
+            'description': request.form.get('description')
+        }
+        
+        if not all(data.values()):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        photos = {
+            'photo1': save_file('photo1'),
+            'photo2': save_file('photo2'),
+            'photo3': save_file('photo3'),
+            'photo4': save_file('photo4'),
+            'photo5': save_file('photo5')
+        }
+
+        cursor = db.cursor()
+        sql = """
+            INSERT INTO vehicules
+            (user_id, marque, modele, prix, kilometrage, energie, type,description, photo1, photo2, photo3, photo4, photo5)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (*data.values(), *photos.values())
+        cursor.execute(sql, values)
+        db.commit()
+
+        return jsonify({"message": "Vehicle added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def get_vehicule(id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT v.*, v.description, u.nom as vendeur_nom, u.prenom as vendeur_prenom
+            FROM vehicules v 
+            JOIN users u ON v.user_id = u.id 
+            WHERE v.id = %s
+        """, (id,))
+        vehicule = cursor.fetchone()
+        
+        if vehicule is None:
+            return jsonify({"error": "Vehicle not found"}), 404
+            
+        return jsonify(vehicule)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+def save_file(file_key):
+    file = request.files.get(file_key)
+    if file and file.filename != '':
+        filename = secure_filename(file.filename)
+        absolute_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(absolute_path)
+        return os.path.join('uploads', filename)
+    return None

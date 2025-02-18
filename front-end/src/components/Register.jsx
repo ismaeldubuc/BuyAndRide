@@ -37,12 +37,17 @@ function Register() {
     formBody.append("password", formData.password);
   
     try {
-      const response = await fetch("http://localhost:5000/register", {
+      const response = await fetch("http://localhost:8000/register", {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
         },
-        body: formBody,
+        body: JSON.stringify({
+          nom: formData.nom,
+          prenom: formData.prenom, 
+          email: formData.email,
+          password: formData.password
+        }),
         credentials: "include",
       });
   

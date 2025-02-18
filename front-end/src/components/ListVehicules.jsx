@@ -10,7 +10,7 @@ export default function ListVehicules() {
   useEffect(() => {
     const fetchVehicules = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/vehicules`, {
+        const response = await axios.get(`http://localhost:8000/vehicules`, {
           withCredentials: true,
         });
         console.log("response:", response.data);
@@ -32,7 +32,7 @@ export default function ListVehicules() {
             className="bg-white rounded-lg shadow-md overflow-hidden"
           >
             <img
-              src={`http://localhost:5000/static/${vehicule.photo1}`}
+              src={`http://localhost:8000/static/${vehicule.photo1}`}
               alt={`${vehicule.marque} ${vehicule.modele}`}
               className="w-full h-48 object-cover"
             />
