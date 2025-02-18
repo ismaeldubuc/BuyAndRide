@@ -124,7 +124,7 @@ function Annonce() {
             placeholder="Modèle"
             value={formData.modele}
             onChange={handleChange}
-            className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
+            className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border  border-gray-300"
           />
         </div>
         <input
