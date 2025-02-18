@@ -7,7 +7,7 @@ import { SiMitsubishi } from "react-icons/si";
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import Login from "./components/login";
+import Login from "./components/Login";
 import Register from "./components/Register";
 import Annonce from "./components/Annonce";
 

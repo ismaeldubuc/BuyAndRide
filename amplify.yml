@@ -1,0 +1,38 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd ../front-end  # Assurez-vous que cette commande est correcte
+        - nvm install 20
+        - nvm use 20
+        - npm install
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: front-end/dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+
+backend:
+  phases:
+    preBuild:
+      commands:
+        - cd back-end
+        - python3 -m venv venv  # Création d'un environnement virtuel
+        - source venv/bin/activate  # Activation de l'environnement virtuel
+        - pip install -r requirements.txt  # Installation des dépendances Python
+    build:
+      commands:
+        - echo "Back-end setup complete"
+  artifacts:
+    baseDirectory: back-end
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - back-end/venv/**/*  # Mise en cache de l'environnement virtuel
