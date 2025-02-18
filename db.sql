@@ -4,11 +4,11 @@ CREATE DATABASE IF NOT EXISTS buyandride;
 
 USE buyandride;
 
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL, 
-    mail VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS user_vehicule (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_user INT NOT NULL,
     id_vehicule INT NOT NULL,
-    FOREIGN KEY (id_user) REFERENCES user(id),
+    FOREIGN KEY (id_user) REFERENCES users(id),
     FOREIGN KEY (id_vehicule) REFERENCES vehicules(id)
 );
 
@@ -41,6 +41,6 @@ CREATE TABLE IF NOT EXISTS pdf (
     id_user INT NOT NULL,
     pdf VARCHAR(255) NOT NULL,
     id_vehicule INT NOT NULL,
-    FOREIGN KEY (id_user) REFERENCES user(id),
+    FOREIGN KEY (id_user) REFERENCES users(id),
     FOREIGN KEY (id_vehicule) REFERENCES vehicules(id)
 );
