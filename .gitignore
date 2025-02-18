@@ -5,14 +5,10 @@ __pycache__/
 *.so
 .Python
 env/
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -24,21 +20,11 @@ wheels/
 # Flask
 instance/
 .webassets-cache
-.env
-.flaskenv
-
-# IDEs et éditeurs
-.idea/
-.vscode/
-*.swp
-*.swo
-.DS_Store
 
 # Environnements virtuels
 venv/
 ENV/
 .venv
-.env
 
 # Logs et bases de données
 *.log
@@ -53,6 +39,18 @@ settings.local.py
 uploads/
 media/
 
-# Fichiers de dépendances
-requirements.txt.lock
+# IDEs et éditeurs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Ne pas ignorer les fichiers essentiels au build et au déploiement sur AWS Amplify
+!front-end/package.json
+!front-end/package-lock.json
+!back-end/requirements.txt
+
+# Fichiers et dossiers temporaires de Python et de pip
 pip-log.txt
+requirements.txt.lock
