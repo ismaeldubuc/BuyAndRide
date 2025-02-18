@@ -61,6 +61,14 @@ def logout_route():
 def create_vehicle_func():
     return create_vehicle()
 
+@app.route('/vehicules', methods=['GET'])
+def list_vehicules_route():
+      return list_vehicules()
+
+@app.route('/vehicules/<int:id>', methods=['GET'])
+def get_vehicule_route(id):
+  return get_vehicule(id)
+
 @app.route('/static/uploads/<path:filename>')
 def serve_image(filename):
     return send_from_directory('static/uploads', filename)
@@ -77,6 +85,9 @@ def delete_vehicle_func():
 def get_vehicle_func():
     return get_vehicle()
 
+@app.route('/vehicules', methods=['POST'])
+def add_vehicule_route():
+   return add_vehicule()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
