@@ -6,13 +6,15 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
-
-
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'buyandride'  
 bcrypt = Bcrypt(app)
+
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 CORS(app, 
      resources={r"/*": {
@@ -21,7 +23,6 @@ CORS(app,
          "methods": ["GET", "POST", "OPTIONS","PUT","DELETE"],
          "allow_headers": ["Content-Type", "Authorization"]
      }})
-
 
 db = mysql.connector.connect(
     host=os.getenv('MYSQL_HOST'),
@@ -303,3 +304,35 @@ def save_file(file_key):
         file.save(absolute_path)
         return os.path.join('uploads', filename)
     return None
+
+def save_devis(vehicule_id, pdf_data):
+    if 'user_id' not in session:
+        return jsonify({"error": "Authentification requise"}), 401
+
+    try:
+        # Création du dossier devis s'il n'existe pas
+        devis_path = os.path.join(app.config['UPLOAD_FOLDER'], 'devis')
+        if not os.path.exists(devis_path):
+            os.makedirs(devis_path)
+
+        # Génération d'un nom de fichier unique
+        filename = f"devis_{vehicule_id}_{session['user_id']}_{int(time.time())}.pdf"
+        file_path = os.path.join(devis_path, filename)
+
+        # Sauvegarde du fichier PDF
+        with open(file_path, 'wb') as f:
+            f.write(pdf_data)
+
+        # Enregistrement dans la base de données
+        cursor = db.cursor()
+        sql = "INSERT INTO devis_pdf (user_id, vehicule_id, pdf_path) VALUES (%s, %s, %s)"
+        cursor.execute(sql, (session['user_id'], vehicule_id, os.path.join('uploads/devis', filename)))
+        db.commit()
+
+        return jsonify({
+            "message": "Devis enregistré avec succès",
+            "pdf_path": os.path.join('uploads/devis', filename)
+        }), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
