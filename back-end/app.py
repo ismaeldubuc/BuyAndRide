@@ -89,5 +89,11 @@ def get_vehicle_func():
 def add_vehicule_route():
    return add_vehicule()
 
+@app.route('/api/devis/<int:vehicule_id>', methods=['POST'])
+def save_devis_route(vehicule_id):
+    if not request.data:
+        return jsonify({"error": "Aucune donnée PDF fournie"}), 400
+    return save_devis(vehicule_id, request.data)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
