@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule
+from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles
 from dotenv import load_dotenv
 import os
 
@@ -102,12 +102,26 @@ def save_devis_route(vehicule_id):
 @app.route('/api/update-etat-vehicule', methods=['PUT'])
 def update_etat_vehicule_route():
     return update_etat_vehicule()
+
 @app.route('/api/get-achat-vehicule', methods=['GET'])
 def get_achat_vehicule_route():
     return get_achat_vehicule()
+
 @app.route('/api/get-louer-vehicule', methods=['GET'])
 def get_louer_vehicule_route():
     return get_louer_vehicule()
+
+@app.route('/vehicules/filter', methods=['POST'])
+def filter_vehicules_route():
+    return filter_vehicules()
+
+@app.route('/marques', methods=['GET'])
+def get_marques_route():
+    return get_marques()
+
+@app.route('/modeles/<marque>', methods=['GET'])
+def get_modeles_route(marque):
+    return get_modeles(marque)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
