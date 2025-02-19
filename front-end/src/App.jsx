@@ -1,7 +1,5 @@
 import "./App.css";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import Annonce from "./components/Annonce";
+import MesRoutes from './MesRoutes';
 
 function App() {
   return (
