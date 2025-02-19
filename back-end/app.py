@@ -422,6 +422,10 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
+@app.route('/api/update-etat-vehicule', methods=['PUT'])
+def update_etat_vehicule_route():
+    return update_etat_vehicule()
+
 if __name__ == "__main__":
     logging.info("Starting Flask application...")
     app.run(host="0.0.0.0", port=8000, debug=True)
