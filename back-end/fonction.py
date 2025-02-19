@@ -398,7 +398,10 @@ def filter_vehicules():
     try:
         cursor.execute(query, params)
         vehicules = cursor.fetchall()
-        return jsonify(vehicules)
+        response = {"vehicules": vehicules}
+        if type_vehicule:
+            response["type"] = type_vehicule
+        return jsonify(response)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
