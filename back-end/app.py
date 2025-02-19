@@ -85,7 +85,7 @@ def delete_vehicle_func():
 def get_vehicle_func():
     return get_vehicle()
 
-@app.route("/api/get-vehicle-by-id/<int:id>", methods=["GET"])
+@app.route("/api/get-vehicle/<int:id>", methods=["GET"])
 def get_vehicle_by_id_func(id):
     return get_vehicle_by_id(id)
 
