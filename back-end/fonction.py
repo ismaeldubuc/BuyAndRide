@@ -370,3 +370,14 @@ def update_etat_vehicule():
         return jsonify({"error": str(err)}), 500
     finally:
         cursor.close()
+
+def get_achat_vehicule():
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT * FROM vehicules WHERE etat = 'acheter'")
+        vehicules_achetes = cursor.fetchall()
+        return jsonify(vehicules_achetes), 200
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+    finally:
+        cursor.close()
