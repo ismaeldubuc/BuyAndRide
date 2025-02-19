@@ -1,4 +1,5 @@
-import mysql.connector
+import psycopg2
+import psycopg2.extras
 from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
@@ -7,12 +8,10 @@ from fonction import register, login, profile, logout, create_vehicle, update_ve
 from dotenv import load_dotenv
 import os
 
-
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'buyandride'
-
+app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
@@ -23,24 +22,22 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
-app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
-app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD') 
-app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
-
-mysql = mysql.connector.connect(
-    host=app.config['MYSQL_HOST'],
-    user=app.config['MYSQL_USER'], 
-    password=app.config['MYSQL_PASSWORD'],
-    database=app.config['MYSQL_DB']
-)
-
-cursor = mysql.cursor(dictionary=True)
+# Configuration de la connexion à PostgreSQL
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=os.getenv('PG_HOST', 'hetic.cd5ufp6fsve3.us-east-1.rds.amazonaws.com'),
+        port=os.getenv('PG_PORT', '5432'),
+        database=os.getenv('PG_DB', 'groupe4'),
+        user=os.getenv('PG_USER', 'postgres'),
+        password=os.getenv('PG_PASSWORD', 'LeContinent!')
+    )
+    return conn
 
 @app.route("/")
 def home():
     return "Hello, World!"
 
+# Routes
 @app.route('/register', methods=['POST'])
 def register_route():
     return register()
@@ -63,11 +60,11 @@ def create_vehicle_func():
 
 @app.route('/vehicules', methods=['GET'])
 def list_vehicules_route():
-      return list_vehicules()
+    return list_vehicules()
 
 @app.route('/vehicules/<int:id>', methods=['GET'])
 def get_vehicule_route(id):
-  return get_vehicule(id)
+    return get_vehicule(id)
 
 @app.route('/static/uploads/<path:filename>')
 def serve_image(filename):
