@@ -24,7 +24,7 @@ export default function MesRoutes() {
               <Route path="register-page" element={<Register />} />
               <Route path="login-page" element={<Login/>} />
               <Route path="profile-page" element={<Profile/>} />
-              <Route path="vehicle-details" element={<VehicleDetails/>} />
+              <Route path="vehicle-details/:id" element={<VehicleDetails/>} />
               <Route path="addVehicule" element={<AddVehicule />} />
               <Route path="vehicules" element={<ListVehicules />} />
               <Route path="vehicules/:id" element={<DetailVehicule />} />

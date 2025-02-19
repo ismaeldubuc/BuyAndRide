@@ -5,9 +5,17 @@ import { FaCar } from "react-icons/fa6";
 import { BiSolidCarMechanic, BiGasPump } from 'react-icons/bi';
 import { TbWheel } from "react-icons/tb";
 import { BiEuro } from "react-icons/bi";
+import { useLocation, useParams } from 'react-router-dom';
 
 
 const VehicleDetails = () => {
+    const { id } = useParams();
+    const location = useLocation();
+    const vehiculeId = location.state?.vehiculeId;
+
+    // Vous pouvez maintenant utiliser l'id pour charger les détails du véhicule
+    console.log("ID du véhicule:", id);
+
     const images = [
         "https://wallpaperaccess.com/full/16270709.jpg",
         "https://wallpaperaccess.com/full/7013653.jpg",

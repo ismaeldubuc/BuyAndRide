@@ -4,8 +4,10 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { BiSolidCarMechanic, BiGasPump } from 'react-icons/bi';
 import { TbWheel } from "react-icons/tb";
 import { BiEuro } from "react-icons/bi";
+import { useNavigate } from 'react-router-dom';
 
 const Acheter = () => {
+    const navigate = useNavigate();
     const [filtres, setFiltres] = useState({
         marque: "",
         modele: "",
@@ -104,24 +106,47 @@ const Acheter = () => {
         }
     };
 
-    useEffect(() => {
-        const chargerVehicules = async () => {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/vehicules', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setVehicules(data);
-                }
-            } catch (error) {
-                console.error('Erreur lors du chargement des véhicules:', error);
-            }
-        };
+    // Données fictives pour test
+    const vehiculesFictifs = [
+        {
+            id: 1,
+            nom: "BMW Série 3",
+            marque: "BMW",
+            modele: "Série 3",
+            energie: "Diesel",
+            kilometrage: 45000,
+            prix: 35000,
+            images: [
+                "https://wallpaperaccess.com/full/16270709.jpg",
+                "https://wallpaperaccess.com/full/7013653.jpg",
+                "https://wallpaperaccess.com/full/970693.jpg"
+            ]
+        },
+        {
+            id: 2,
+            nom: "Mercedes Classe C",
+            marque: "Mercedes",
+            modele: "Classe C",
+            energie: "Essence",
+            kilometrage: 25000,
+            prix: 42000,
+            images: [
+                "https://wallpaperaccess.com/full/7013653.jpg",
+                "https://wallpaperaccess.com/full/16270709.jpg",
+                "https://wallpaperaccess.com/full/970693.jpg"
+            ]
+        }
+    ];
 
+    useEffect(() => {
+        // Remplacer le chargement des véhicules par les données fictives
+        setVehicules(vehiculesFictifs);
         chargerMarques();
-        chargerVehicules();
     }, []);
+
+    const handleVoirDetails = (id) => {
+        navigate(`/vehicle-details/${id}`);
+    };
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -239,8 +264,8 @@ const Acheter = () => {
                                     </div>
                                 </div>
                                 <button
-                                    className="w-full bg-[#24507F] text-white py-2 px-4 rounded-lg hover:opacity-80 transition duration-300"
-                                    onClick={() => {/* Navigation vers la page détaillée */}}
+                                    className="w-full bg-[#24507F] text-white py-2 px-4 rounded-lg hover:opacity-80 transition duration-300 mt-4"
+                                    onClick={() => handleVoirDetails(vehicule.id)}
                                 >
                                     Voir plus de détails
                                 </button>
