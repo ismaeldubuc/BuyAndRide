@@ -356,3 +356,17 @@ def save_devis(vehicule_id, pdf_data):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+def update_etat_vehicule():
+    data = request.json
+    vehicule_id = data.get('id')
+    etat = data.get('etat')
+    cursor = db.cursor()
+    try:
+        cursor.execute("UPDATE vehicules SET etat = %s WHERE id = %s", (etat, vehicule_id))
+        db.commit()
+        return jsonify({"message": "Etat du véhicule mis à jour avec succès"}), 200
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+    finally:
+        cursor.close()
