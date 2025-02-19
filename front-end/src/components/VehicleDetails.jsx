@@ -1,7 +1,6 @@
 // BuyAndRide/front-end/src/components/VehicleDetails.jsx
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Header from './header';
 import { FaCar } from "react-icons/fa6";
 import { BiSolidCarMechanic, BiGasPump } from 'react-icons/bi';
 import { TbWheel } from "react-icons/tb";

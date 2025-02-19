@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from "./components/header";
+import Header from "./components/Header";
 import PageFound from "./components/PageFound";
 import Register from "./components/Register";
 import Login from "./components/Login";
@@ -28,7 +28,8 @@ export default function MesRoutes() {
               <Route path="addVehicule" element={<AddVehicule />} />
               <Route path="vehicules" element={<ListVehicules />} />
               <Route path="vehicules/:id" element={<DetailVehicule />} />
-              <Route path="annonce" element={<Annonce />} />
+              <Route path="annonce" element={<Annonce />} />  
+              <Route path="acheter-page" element={<Acheter />} />
               
               <Route path="*" element={<PageFound />} />
           </Routes>

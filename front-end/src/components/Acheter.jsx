@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Carousel } from 'react-responsive-carousel';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
-import { FaCar } from "react-icons/fa6";
 import { BiSolidCarMechanic, BiGasPump } from 'react-icons/bi';
 import { TbWheel } from "react-icons/tb";
 import { BiEuro } from "react-icons/bi";
