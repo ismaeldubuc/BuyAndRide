@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule
+from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id
 from dotenv import load_dotenv
 import os
 
@@ -84,6 +84,10 @@ def delete_vehicle_func():
 @app.route("/api/get-vehicle", methods=["GET"])
 def get_vehicle_func():
     return get_vehicle()
+
+@app.route("/api/get-vehicle-by-id/<int:id>", methods=["GET"])
+def get_vehicle_by_id_func(id):
+    return get_vehicle_by_id(id)
 
 @app.route('/vehicules', methods=['POST'])
 def add_vehicule_route():

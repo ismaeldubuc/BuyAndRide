@@ -150,6 +150,26 @@ def get_vehicle():
 
     finally:
         cursor.close()
+        
+def get_vehicle_by_id(id):
+    cursor = db.cursor(dictionary=True)
+
+    try:
+        query = """
+            SELECT * 
+            FROM vehicules
+            WHERE id = %s
+        """
+        cursor.execute(query, (id,))
+        vehicle = cursor.fetchone()
+
+        return jsonify(vehicle), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+
+    finally:
+        cursor.close()
 
 def register():
     if request.method == 'POST':
