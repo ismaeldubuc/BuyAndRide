@@ -355,7 +355,54 @@ def save_devis(vehicule_id, pdf_data):
         }), 201
 
     except Exception as e:
+        return jsonify({"error": str
+                        (e)}), 500
+
+def filter_vehicules():
+    marque = request.args.get('marque')
+    modele = request.args.get('modele')
+    prix = request.args.get('prix')
+    kilometrage = request.args.get('kilometrage')
+    energie = request.args.get('energie')
+    type_vehicule = request.args.get('type')
+
+    cursor = db.cursor(dictionary=True)
+    
+    query = "SELECT * FROM vehicules WHERE 1=1"
+    params = []
+
+    if marque:
+        query += " AND marque = %s"
+        params.append(marque)
+    
+    if modele:
+        query += " AND modele = %s" 
+        params.append(modele)
+
+    if prix:
+        query += " AND prix <= %s"
+        params.append(prix)
+
+    if kilometrage:
+        query += " AND km <= %s"
+        params.append(kilometrage)
+
+    if energie:
+        query += " AND energie = %s"
+        params.append(energie)
+
+    if type_vehicule:
+        query += " AND type = %s"
+        params.append(type_vehicule)
+
+    try:
+        cursor.execute(query, params)
+        vehicules = cursor.fetchall()
+        return jsonify(vehicules)
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
     
 def update_etat_vehicule():
     data = request.json
@@ -392,3 +439,24 @@ def get_louer_vehicule():
         return jsonify({"error": str(err)}), 500
     finally:
         cursor.close()
+    
+def get_marques():
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT DISTINCT marque FROM vehicules ORDER BY marque")
+        marques = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        return jsonify(marques)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+def get_modeles(marque):
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT DISTINCT modele FROM vehicules WHERE marque = %s ORDER BY modele", (marque,))
+        modeles = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        return jsonify(modeles)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
