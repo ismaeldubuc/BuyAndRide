@@ -168,7 +168,7 @@ function EditVehicule() {
 
       <button
         type="submit"
-        className="bg-green-500 text-white px-5 py-3 rounded-lg shadow-md hover:bg-green-600 transition"
+        className="bg-blue-500 text-white px-5 py-3 rounded-lg shadow-md hover:bg-green-600 transition"
       >
         Modifier
       </button>
