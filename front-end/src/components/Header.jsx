@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Header() {
     const [showMenu, setShowMenu] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <header className="bg-white dark:bg-gray-900 shadow-md w-full font-['Plus_Jakarta_Sans']">
@@ -13,13 +15,20 @@ function Header() {
 
                 {/* Boutons au centre */}
                 <div className="flex space-x-40">
-                    <button className="text-[#24507F] hover:opacity-80 focus:outline-none text-3xl px-4 py-2 text-center transition duration-300 font-['Plus_Jakarta_Sans']">
+                    <button 
+                        onClick={() => navigate('/acheter-page')}
+                        className="text-[#24507F] hover:opacity-80 focus:outline-none text-3xl px-4 py-2 text-center transition duration-300 font-['Plus_Jakarta_Sans']"
+                    >
                         Acheter
                     </button>
-                    <button className="text-[#508DCE] hover:opacity-80 focus:outline-none text-3xl px-4 py-2 text-center transition duration-300 font-['Plus_Jakarta_Sans']">
+                    <button 
+                    onClick={() => navigate('/louer-page')}
+                    className="text-[#508DCE] hover:opacity-80 focus:outline-none text-3xl px-4 py-2 text-center transition duration-300 font-['Plus_Jakarta_Sans']">
                         Louer
                     </button>
-                    <button className="text-[#90B6E0] hover:opacity-80 focus:outline-none text-3xl px-4 py-2 text-center transition duration-300 font-['Plus_Jakarta_Sans']">
+                    <button
+                    onClick={() => navigate('/')} // pour aboubakar
+                    className="text-[#90B6E0] hover:opacity-80 focus:outline-none text-3xl px-4 py-2 text-center transition duration-300 font-['Plus_Jakarta_Sans']">
                         Vendre
                     </button>
                 </div>

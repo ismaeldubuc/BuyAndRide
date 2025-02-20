@@ -11,6 +11,7 @@ import Annonce from "./components/Annonce";
 import Accueil from "./components/Accueil";
 import Acheter from "./components/Acheter";
 import VehicleDetails from "./components/VehicleDetails";
+import Louer from "./components/Louer";
 
 export default function MesRoutes() {
   return (
@@ -30,7 +31,7 @@ export default function MesRoutes() {
               <Route path="vehicules/:id" element={<DetailVehicule />} />
               <Route path="annonce" element={<Annonce />} />  
               <Route path="acheter-page" element={<Acheter />} />
-              
+              <Route path="louer-page" element={<Louer />} />
               <Route path="*" element={<PageFound />} />
           </Routes>
         </main>
