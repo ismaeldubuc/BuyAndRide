@@ -12,6 +12,7 @@ import Accueil from "./components/Accueil";
 import Acheter from "./components/Acheter";
 import VehicleDetails from "./components/VehicleDetails";
 import Louer from "./components/Louer";
+import EditVehicule from "./components/EditVehicule";
 
 export default function MesRoutes() {
   return (
@@ -20,19 +21,20 @@ export default function MesRoutes() {
         <Header />
         <main className="p-4">
           <Routes>
-              {/* <Route path="register" element={<Register />} /> */}
-              <Route path="/" element={<Accueil/>} />
-              <Route path="register-page" element={<Register />} />
-              <Route path="login-page" element={<Login/>} />
-              <Route path="profile-page" element={<Profile/>} />
-              <Route path="vehicle-details" element={<VehicleDetails/>} />
-              <Route path="addVehicule" element={<AddVehicule />} />
-              <Route path="vehicules" element={<ListVehicules />} />
-              <Route path="vehicules/:id" element={<DetailVehicule />} />
-              <Route path="annonce" element={<Annonce />} />  
-              <Route path="acheter-page" element={<Acheter />} />
-              <Route path="louer-page" element={<Louer />} />
-              <Route path="*" element={<PageFound />} />
+            {/* <Route path="register" element={<Register />} /> */}
+            <Route path="/" element={<Accueil />} />
+            <Route path="register-page" element={<Register />} />
+            <Route path="login-page" element={<Login />} />
+            <Route path="profile-page" element={<Profile />} />
+            <Route path="vehicle-details" element={<VehicleDetails />} />
+            <Route path="addVehicule" element={<AddVehicule />} />
+            <Route path="vehicules" element={<ListVehicules />} />
+            <Route path="vehicules/:id" element={<DetailVehicule />} />
+            <Route path="annonce" element={<Annonce />} />
+            <Route path="acheter-page" element={<Acheter />} />
+            <Route path="editvehicule" element={<EditVehicule />} />
+            <Route path="louer-page" element={<Louer />} />
+            <Route path="*" element={<PageFound />} />
           </Routes>
         </main>
       </div>
