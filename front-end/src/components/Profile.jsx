@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { API_URL, STATIC_URL } from '../config';
+import { API_URL, STATIC_URL } from "../config";
 
 function Profile() {
   const [vehicules, setVehicules] = useState([]);
@@ -18,12 +18,12 @@ function Profile() {
     const fetchUserData = async () => {
       try {
         const response = await fetch(`${API_URL}/check-login`, {
-          credentials: 'include'
+          credentials: "include",
         });
         const data = await response.json();
         setUserData(data);
       } catch (error) {
-        console.error('Erreur:', error);
+        console.error("Erreur:", error);
       }
     };
 
@@ -40,14 +40,14 @@ function Profile() {
             "Content-Type": "application/json",
           },
         });
-  
-        const dataArray = await response.json();  
+
+        const dataArray = await response.json();
         if (response.ok) {
           if (dataArray.length === 3) {
             const userData = {
               nom: dataArray[0],
               prenom: dataArray[1],
-              email: dataArray[2]
+              email: dataArray[2],
             };
             setUser(userData);
           } else {
@@ -55,17 +55,19 @@ function Profile() {
             setError("Format des données incorrect.");
           }
         } else {
-          setError(dataArray.error || "Impossible de récupérer les informations.");
+          setError(
+            dataArray.error || "Impossible de récupérer les informations."
+          );
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des données:", error);
         setError("Erreur serveur.");
       }
     };
-  
+
     fetchProfile();
   }, []);
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prevState) => ({
@@ -74,7 +76,6 @@ function Profile() {
     }));
   };
 
-  
   const userId = localStorage.getItem("userId");
   // console.log("userId:", userId);
 
@@ -177,12 +178,12 @@ function Profile() {
   const getImageUrl = (photoUrl) => {
     if (!photoUrl) return null;
     console.log("Traitement de l'URL:", photoUrl);
-    
+
     // Si c'est une URL S3
-    if (photoUrl.includes('s3.amazonaws.com')) {
+    if (photoUrl.includes("s3.amazonaws.com")) {
       return photoUrl;
     }
-    
+
     // Si c'est un chemin local
     return `${STATIC_URL}/${photoUrl}`;
   };
@@ -193,7 +194,6 @@ function Profile() {
 
   return (
     <>
-  
       <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-6">
         <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-3xl dark:bg-gray-800">
           <div className="space-y-6">
@@ -251,7 +251,10 @@ function Profile() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicules.map((vehicule) => (
-            <div key={vehicule.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div
+              key={vehicule.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden"
+            >
               <div className="image-container">
                 {vehicule.photo1 && (
                   <img
@@ -259,8 +262,11 @@ function Profile() {
                     alt={`${vehicule.marque} ${vehicule.modele}`}
                     className="w-full h-48 object-cover"
                     onError={(e) => {
-                      console.error(`Erreur de chargement de l'image:`, vehicule.photo1);
-                      e.target.src = '/src/assets/placeholder.png';
+                      console.error(
+                        `Erreur de chargement de l'image:`,
+                        vehicule.photo1
+                      );
+                      e.target.src = "/src/assets/placeholder.png";
                     }}
                   />
                 )}
