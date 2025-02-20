@@ -13,6 +13,7 @@ import Acheter from "./components/Acheter";
 import VehicleDetails from "./components/VehicleDetails";
 import Louer from "./components/Louer";
 import UpdateProfile from "./components/UpdateProfile";
+import EditVehicule from "./components/EditVehicule";
 
 export default function MesRoutes() {
   return (
@@ -33,6 +34,8 @@ export default function MesRoutes() {
             <Route path="acheter-page" element={<Acheter />} />
             <Route path="louer-page" element={<Louer />} />
             <Route path="update-profile" element={<UpdateProfile />} />
+            <Route path="editvehicule" element={<EditVehicule />} />
+            <Route path="louer-page" element={<Louer />} />
             <Route path="*" element={<PageFound />} />
           </Routes>
         </main>

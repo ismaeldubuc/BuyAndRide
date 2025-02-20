@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 
-function Annonce() {
+function EditVehicule() {
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     marque: "",
     modele: "",
@@ -10,8 +12,25 @@ function Annonce() {
     type: "",
     description: "",
   });
-
   const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    const fetchVehicule = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/vehicules/${id}`);
+        const data = await response.json();
+        if (response.ok) {
+          setFormData(data);
+        } else {
+          console.error("Erreur lors de la récupération des données :", data);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la requête :", error);
+      }
+    };
+
+    fetchVehicule();
+  }, [id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,37 +43,22 @@ function Annonce() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       data.append(key, value);
     });
-
     images.forEach((image, index) => {
       data.append(`photo${index + 1}`, image);
     });
-
     try {
-      const response = await fetch(`${API_URL}/vehicules`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      const response = await fetch(`http://127.0.0.1:5000/vehicules/${id}`, {
+        method: "PUT",
+        body: data,
+        credentials: "include",
       });
-
       const result = await response.json();
-
       if (response.ok) {
-        alert("Véhicule ajouté avec succès !");
-        setFormData({
-          marque: "",
-          modele: "",
-          prix: "",
-          kilometrage: "",
-          energie: "",
-          type: "",
-          description: "",
-        });
-        setImages([]);
+        alert("Véhicule modifié avec succès !");
       } else {
         console.error("Erreur API:", result);
         alert(result.error || "Erreur inconnue");
@@ -105,28 +109,22 @@ function Annonce() {
       </div>
 
       <div className="p-4 flex flex-col gap-4 w-full">
-        <div className="flex gap-4 items-center">
-          <select
-            name="marque"
-            value={formData.marque}
-            onChange={handleChange}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-          >
-            <option value="">Choisissez une marque</option>
-            <option value="BMW">BMW</option>
-            <option value="DACIA">DACIA</option>
-            <option value="TOYOTA">TOYOTA</option>
-            <option value="MITSUBISHI MOTORS">MITSUBISHI MOTORS</option>
-          </select>
-          <input
-            type="text"
-            name="modele"
-            placeholder="Modèle"
-            value={formData.modele}
-            onChange={handleChange}
-            className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border  border-gray-300"
-          />
-        </div>
+        <input
+          type="text"
+          name="marque"
+          placeholder="Marque"
+          value={formData.marque}
+          onChange={handleChange}
+          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
+        />
+        <input
+          type="text"
+          name="modele"
+          placeholder="Modèle"
+          value={formData.modele}
+          onChange={handleChange}
+          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
+        />
         <input
           type="number"
           name="prix"
@@ -170,12 +168,12 @@ function Annonce() {
 
       <button
         type="submit"
-        className="bg-blue-500 text-white px-5 py-3 rounded-lg shadow-md hover:bg-blue-600 transition"
+        className="bg-green-500 text-white px-5 py-3 rounded-lg shadow-md hover:bg-green-600 transition"
       >
-        Poster
+        Modifier
       </button>
     </form>
   );
 }
 
-export default Annonce;
+export default EditVehicule;
