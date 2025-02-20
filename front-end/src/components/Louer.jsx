@@ -6,7 +6,7 @@ import { TbWheel } from "react-icons/tb";
 import { BiEuro } from "react-icons/bi";
 import { useNavigate } from 'react-router-dom';
 
-const Acheter = () => {
+const Louer = () => {
     const [filtres, setFiltres] = useState({
         marque: "",
         modele: "",
@@ -58,19 +58,20 @@ const Acheter = () => {
         chargerVehicules();
     }, []);
 
+    // Mettre à jour les modèles quand une marque est sélectionnée
     const handleFiltreChange = (e) => {
         const { name, value } = e.target;
         setFiltres(prev => ({ ...prev, [name]: value }));
         
         if (name === 'marque') {
-
+            // Filtrer les modèles pour la marque sélectionnée
             const modelesUniques = [...new Set(
                 vehicules
                     .filter(v => v.marque === value)
                     .map(v => v.modele)
             )];
             setModeles(modelesUniques);
-            setFiltres(prev => ({ ...prev, modele: '' }));
+            setFiltres(prev => ({ ...prev, modele: '' })); // Réinitialiser le modèle
         }
     };
 
@@ -285,4 +286,4 @@ const Acheter = () => {
     );
 };
 
-export default Acheter;
+export default Louer;

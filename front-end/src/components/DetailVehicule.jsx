@@ -7,25 +7,21 @@ import autoTable from "jspdf-autotable";
 export default function DetailVehicule() {
   const { id } = useParams();
   const [vehicule, setVehicule] = useState(null);
-
   const [erreur, setErreur] = useState(null);
+
   useEffect(() => {
     const fetchVehicule = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/vehicules/${id}`
+          `http://localhost:8000/api/get-vehicle/${id}`,
+          { withCredentials: true }
         );
         console.log("Données reçues:", response.data);
         setVehicule(response.data);
         setErreur(null);
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error("Erreur Axios:", error.message);
-          setErreur(error.message);
-        } else {
-          console.error("Erreur inconnue:", error);
-          setErreur("Erreur inconnue");
-        }
+        console.error("Erreur:", error);
+        setErreur("Erreur lors du chargement du véhicule");
         setVehicule(null);
       }
     };
@@ -178,49 +174,85 @@ export default function DetailVehicule() {
     });
 };
 
+  if (erreur) return <div className="text-red-500">{erreur}</div>;
   if (!vehicule) return <div>Chargement...</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">
-        {vehicule.marque} {vehicule.modele}
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <img
-            src={`http://localhost:8000/static/${vehicule.photo1}`}
-            alt={`${vehicule.marque} ${vehicule.modele}`}
-            className="w-full rounded-lg"
-          />
-          <div className="grid grid-cols-4 gap-2 mt-2">
-            {[2, 3, 4, 5].map(
-              (num) =>
-                vehicule[`photo${num}`] && (
+    <div className="w-full px-8 mt-5">
+      {/* Section principale avec images et infos de base */}
+      <div className="row justify-content-between mb-5">
+        {/* Galerie d'images */}
+        <div className="col-8">
+          <div className="carousel">
+            <img 
+              src={`http://localhost:8000/static/${vehicule.photo1}`}
+              className="d-block w-100" 
+              alt={`${vehicule.marque} ${vehicule.modele}`}
+              style={{ height: '600px', objectFit: 'cover' }}
+            />
+            <div className="mt-2 d-flex gap-2">
+              {[vehicule.photo2, vehicule.photo3, vehicule.photo4, vehicule.photo5]
+                .filter(photo => photo)
+                .map((photo, index) => (
                   <img
-                    key={num}
-                    src={`http://localhost:8000/static/${
-                      vehicule[`photo${num}`]
-                    }`}
-                    alt={`Vue ${num}`}
-                    className="w-full h-20 object-cover rounded"
+                    key={index}
+                    src={`http://localhost:8000/static/${photo}`}
+                    alt={`Vue ${index + 2}`}
+                    className="img-thumbnail"
+                    style={{ width: '150px', height: '100px', objectFit: 'cover' }}
                   />
-                )
-            )}
+                ))
+              }
+            </div>
           </div>
         </div>
-        <div>
-          <p className="text-2xl font-bold">{vehicule.prix} €</p>
-          <p className="text-gray-600">{vehicule.kilometrage} km</p>
-          <p className="text-gray-600">{vehicule.energie}</p>
-          <p className="text-gray-600">{vehicule.type}</p>
-          <p className="text-gray-600">{vehicule.description}</p>
-          <div className="mt-6">
-            <button
-              onClick={generatePDF}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Télécharger le devis
-            </button>
+
+        {/* Informations de base */}
+        <div className="col-4">
+          <div className="w-full bg-white rounded-lg shadow-lg p-8 space-y-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold">
+                {vehicule.marque} {vehicule.modele}
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-lg">
+                <span className="font-bold">Prix: </span>
+                {vehicule.prix} €
+              </p>
+              <p className="text-lg">
+                <span className="font-bold">Kilométrage: </span>
+                {vehicule.kilometrage} km
+              </p>
+              <p className="text-lg">
+                <span className="font-bold">Énergie: </span>
+                {vehicule.energie}
+              </p>
+              <p className="text-lg">
+                <span className="font-bold">Type: </span>
+                {vehicule.type}
+              </p>
+            </div>
+            <div className="mt-6">
+              <button
+                onClick={generatePDF}
+                className="w-full text-white bg-[#24507F] hover:opacity-80 focus:outline-none text-xl px-6 py-3 text-center rounded-lg"
+              >
+                Obtenir mon devis
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section description détaillée */}
+      <div className="row mt-4">
+        <div className="col-12">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-bold mb-4">Description détaillée :</h3>
+            <p className="text-gray-700">
+              {vehicule.description}
+            </p>
           </div>
         </div>
       </div>
