@@ -5,6 +5,7 @@ __pycache__/
 *.so
 .Python
 env/
+/back-end/.env
 develop-eggs/
 downloads/
 eggs/
@@ -54,3 +55,6 @@ media/
 # Fichiers et dossiers temporaires de Python et de pip
 pip-log.txt
 requirements.txt.lock
+
+# Fichiers d'environnement
+/back-end/.env
