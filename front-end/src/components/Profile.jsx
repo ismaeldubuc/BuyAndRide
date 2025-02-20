@@ -34,22 +34,33 @@ function Profile() {
             'Content-Type': 'application/json',
           },
         });
-
-        const data = await response.json();
+  
+        const dataArray = await response.json();  // Assume dataArray is something like ["Dubuc", "Ismael", "ismael.dubuc@gmail.com"]
         if (response.ok) {
-          setUser(data);
+          // Conversion du tableau en objet
+          if (dataArray.length === 3) {
+            const userData = {
+              nom: dataArray[0],
+              prenom: dataArray[1],
+              email: dataArray[2]
+            };
+            setUser(userData);
+          } else {
+            console.error("Format des données reçues inattendu:", dataArray);
+            setError("Format des données incorrect.");
+          }
         } else {
-          setError(data.error || "Impossible de récupérer les informations.");
+          setError(dataArray.error || "Impossible de récupérer les informations.");
         }
-      } catch (response) {
-        console.log(response.headers);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données:", error);
         setError("Erreur serveur.");
       }
     };
-
+  
     fetchProfile();
   }, []);
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prevState) => ({
@@ -72,7 +83,7 @@ function Profile() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/profile", {
+      const response = await fetch("http://localhost:8000/modif_profil", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -104,7 +115,7 @@ function Profile() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/profile", {
+      const response = await fetch("http://localhost:8000/modif_profil", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -334,31 +345,6 @@ function Profile() {
       </div>
     </div>
   );
-}export default Profile;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default Profile;
