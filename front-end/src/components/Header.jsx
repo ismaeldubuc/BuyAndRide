@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from '../config';
+import { API_URL } from "../config";
 
 function Header() {
   const [showMenu, setShowMenu] = useState(false);
@@ -11,12 +11,15 @@ function Header() {
     const checkAuth = async () => {
       try {
         const response = await fetch(`${API_URL}/check-login`, {
-          credentials: 'include'
+          credentials: "include",
         });
         const data = await response.json();
         setIsConnected(data.isLoggedIn);
       } catch (error) {
-        console.error('Erreur lors de la vérification de l\'authentification', error);
+        console.error(
+          "Erreur lors de la vérification de l'authentification",
+          error
+        );
       }
     };
 
@@ -46,21 +49,29 @@ function Header() {
     <header className="bg-white dark:bg-gray-900 shadow-md w-full font-['Plus_Jakarta_Sans']">
       <div className="flex justify-between items-center w-full px-4 py-3">
         <div className="flex items-center">
-          <img src="/src/assets/logo.svg" alt="Logo" className="w-20 h-20" onClick={() => navigate("/")}/>
+          <img
+            src="/src/assets/logo.svg"
+            alt="Logo"
+            className="w-20 h-20"
+            onClick={() => navigate("/")}
+          />
         </div>
 
         <div className="flex space-x-40">
-          <button className="text-[#24507F] hover:opacity-80 text-3xl px-4 py-2 transition"
-          onClick={() => navigate("/acheter-page")}
+          <button
+            className="text-[#24507F] hover:opacity-80 text-3xl px-4 py-2 transition"
+            onClick={() => navigate("/acheter-page")}
           >
             Acheter
           </button>
-          <button className="text-[#508DCE] hover:opacity-80 text-3xl px-4 py-2 transition"
+          <button
+            className="text-[#508DCE] hover:opacity-80 text-3xl px-4 py-2 transition"
             onClick={() => navigate("/louer-page")}
           >
             Louer
           </button>
-          <button className="text-[#90B6E0] hover:opacity-80 text-3xl px-4 py-2 transition"
+          <button
+            className="text-[#90B6E0] hover:opacity-80 text-3xl px-4 py-2 transition"
             onClick={() => navigate("/addVehicule")}
           >
             Vendre

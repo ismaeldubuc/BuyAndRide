@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { API_URL, STATIC_URL } from '../config';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { API_URL, STATIC_URL } from "../config";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -16,11 +16,11 @@ function DetailVehicule() {
       try {
         // Vérifier d'abord si l'utilisateur est connecté
         const checkLoginResponse = await fetch(`${API_URL}/check-login`, {
-          credentials: 'include'
+          credentials: "include",
         });
 
         if (!checkLoginResponse.ok) {
-          navigate('/login');
+          navigate("/login");
           return;
         }
 
@@ -28,17 +28,22 @@ function DetailVehicule() {
         console.log("Données de connexion:", loginInfo);
 
         if (!loginInfo.isLoggedIn) {
-          navigate('/login');
+          navigate("/login");
           return;
         }
 
         // Maintenant, récupérer les informations détaillées de l'utilisateur
-        const userDetailResponse = await fetch(`${API_URL}/user/${loginInfo.user_id}`, {
-          credentials: 'include'
-        });
+        const userDetailResponse = await fetch(
+          `${API_URL}/user/${loginInfo.user_id}`,
+          {
+            credentials: "include",
+          }
+        );
 
         if (!userDetailResponse.ok) {
-          throw new Error('Erreur lors de la récupération des détails utilisateur');
+          throw new Error(
+            "Erreur lors de la récupération des détails utilisateur"
+          );
         }
 
         const userDetails = await userDetailResponse.json();
@@ -47,17 +52,17 @@ function DetailVehicule() {
 
         // Récupérer les détails du véhicule
         const vehiculeResponse = await fetch(`${API_URL}/vehicules/${id}`, {
-          credentials: 'include'
+          credentials: "include",
         });
 
         if (!vehiculeResponse.ok) {
-          throw new Error('Erreur lors de la récupération du véhicule');
+          throw new Error("Erreur lors de la récupération du véhicule");
         }
 
         const vehiculeData = await vehiculeResponse.json();
         setVehicule(vehiculeData);
       } catch (error) {
-        console.error('Erreur:', error);
+        console.error("Erreur:", error);
         setErreur(error.message);
       }
     };
@@ -68,11 +73,11 @@ function DetailVehicule() {
   const generatePDF = async () => {
     try {
       if (!userData) {
-        throw new Error('Informations utilisateur non disponibles');
+        throw new Error("Informations utilisateur non disponibles");
       }
 
       const doc = new jsPDF();
-      
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(20);
       doc.setTextColor(41, 128, 185);
@@ -81,58 +86,58 @@ function DetailVehicule() {
       doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
       doc.text("Devis Véhicule", 105, 25, { align: "center" });
-      
+
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.text(
-          `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
-              `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
-              'M-Motors'}`,
-          15,
-          35
+        `Vendeur: ${
+          vehicule.vendeur_prenom && vehicule.vendeur_nom
+            ? `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}`
+            : "M-Motors"
+        }`,
+        15,
+        35
       );
 
       // Vérifier la structure des données utilisateur
       console.log("Données utilisateur pour le PDF:", userData);
-      
+
       // Adapter selon la structure réelle des données
-      const nomAcheteur = userData.user ? `${userData.user.prenom} ${userData.user.nom}` : 
-                         (userData.prenom && userData.nom) ? `${userData.prenom} ${userData.nom}` : 
-                         'Non spécifié';
-      
-      doc.text(
-          `Acheteur: ${nomAcheteur}`,
-          15,
-          42
-      );
+      const nomAcheteur = userData.user
+        ? `${userData.user.prenom} ${userData.user.nom}`
+        : userData.prenom && userData.nom
+        ? `${userData.prenom} ${userData.nom}`
+        : "Non spécifié";
+
+      doc.text(`Acheteur: ${nomAcheteur}`, 15, 42);
 
       doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 49);
 
       autoTable(doc, {
-          startY: 45,
-          head: [["Caractéristiques", "Détails"]],
-          body: [
-              ["Marque", vehicule.marque],
-              ["Modèle", vehicule.modele],
-              ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
-              ["Kilométrage", `${vehicule.km} km`],
-              ["Énergie", vehicule.energie],
-              ["Type", vehicule.type ? 'À vendre' : 'À louer'],
-          ],
-          theme: "striped",
-          headStyles: {
-              fillColor: [41, 128, 185],
-              textColor: [255, 255, 255],
-              fontSize: 10,
-              fontStyle: "bold",
-          },
-          bodyStyles: {
-              fontSize: 10,
-          },
-          alternateRowStyles: {
-              fillColor: [240, 240, 240],
-          },
-          margin: { left: 15, right: 15 },
+        startY: 45,
+        head: [["Caractéristiques", "Détails"]],
+        body: [
+          ["Marque", vehicule.marque],
+          ["Modèle", vehicule.modele],
+          ["Prix", `${vehicule.prix} ${vehicule.type ? "€" : "€/mois"}`],
+          ["Kilométrage", `${vehicule.km} km`],
+          ["Énergie", vehicule.energie],
+          ["Type", vehicule.type ? "À vendre" : "À louer"],
+        ],
+        theme: "striped",
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontSize: 10,
+          fontStyle: "bold",
+        },
+        bodyStyles: {
+          fontSize: 10,
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240],
+        },
+        margin: { left: 15, right: 15 },
       });
 
       doc.setFontSize(12);
@@ -141,7 +146,7 @@ function DetailVehicule() {
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
-          maxWidth: 180,
+        maxWidth: 180,
       });
 
       doc.setFontSize(12);
@@ -151,14 +156,14 @@ function DetailVehicule() {
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       const conditions = [
-          "• Ce devis est valable 30 jours à compter de sa date d'émission",
-          "• Prix indiqué hors frais d'immatriculation et de mise en route",
-          "• Garantie selon conditions en vigueur",
-          "• Photos non contractuelles",
+        "• Ce devis est valable 30 jours à compter de sa date d'émission",
+        "• Prix indiqué hors frais d'immatriculation et de mise en route",
+        "• Garantie selon conditions en vigueur",
+        "• Photos non contractuelles",
       ];
 
       conditions.forEach((condition, index) => {
-          doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + (index * 7));
+        doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + index * 7);
       });
 
       doc.text("Signature du vendeur:", 15, 250);
@@ -166,46 +171,52 @@ function DetailVehicule() {
 
       doc.setFontSize(8);
       doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
-          align: "center",
+        align: "center",
       });
 
-      const pdfBlob = doc.output('blob');
-      
+      const pdfBlob = doc.output("blob");
+
       const formData = new FormData();
       // Adapter le nom du fichier selon la structure
-      const nomFichier = userData.user ? `${userData.user.nom}_${vehicule.modele}.pdf` :
-                        userData.nom ? `${userData.nom}_${vehicule.modele}.pdf` :
-                        `devis_${vehicule.modele}.pdf`;
-      
-      formData.append('pdf', new Blob([pdfBlob], { type: 'application/pdf' }), nomFichier);
-      formData.append('vehicule_id', vehicule.id);
+      const nomFichier = userData.user
+        ? `${userData.user.nom}_${vehicule.modele}.pdf`
+        : userData.nom
+        ? `${userData.nom}_${vehicule.modele}.pdf`
+        : `devis_${vehicule.modele}.pdf`;
 
-      console.log('Tentative d\'envoi du devis...');
+      formData.append(
+        "pdf",
+        new Blob([pdfBlob], { type: "application/pdf" }),
+        nomFichier
+      );
+      formData.append("vehicule_id", vehicule.id);
+
+      console.log("Tentative d'envoi du devis...");
 
       const response = await fetch(`${API_URL}/api/upload-devis`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-              'Accept': 'application/json',
-          },
-          body: formData
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
+        body: formData,
       });
 
-      console.log('Réponse reçue:', response.status);
+      console.log("Réponse reçue:", response.status);
 
       if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Erreur lors de l\'upload du devis');
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de l'upload du devis");
       }
 
       const data = await response.json();
-      console.log('Devis uploadé avec succès:', data.url);
-      
+      console.log("Devis uploadé avec succès:", data.url);
+
       doc.save(nomFichier);
-      
-      alert('Le devis a été généré et sauvegardé avec succès !');
+
+      alert("Le devis a été généré et sauvegardé avec succès !");
     } catch (error) {
-      console.error('Erreur détaillée:', error);
+      console.error("Erreur détaillée:", error);
       alert(`Erreur lors de la génération du devis: ${error.message}`);
     }
   };
@@ -221,29 +232,41 @@ function DetailVehicule() {
         <div className="col-8">
           <div className="carousel">
             {vehicule.photo1 && (
-              <img 
+              <img
                 src={vehicule.photo1}
                 alt={`${vehicule.marque} ${vehicule.modele}`}
-                style={{ height: '600px', objectFit: 'cover' }}
+                style={{ height: "600px", objectFit: "cover" }}
                 onError={(e) => {
-                  console.error(`Erreur de chargement de l'image:`, vehicule.photo1);
-                  e.target.src = '/src/assets/placeholder.png';
+                  console.error(
+                    `Erreur de chargement de l'image:`,
+                    vehicule.photo1
+                  );
+                  e.target.src = "/src/assets/placeholder.png";
                 }}
               />
             )}
             <div className="mt-2 d-flex gap-2">
-              {[vehicule.photo2, vehicule.photo3, vehicule.photo4, vehicule.photo5]
-                .filter(photo => photo)
+              {[
+                vehicule.photo2,
+                vehicule.photo3,
+                vehicule.photo4,
+                vehicule.photo5,
+              ]
+                .filter((photo) => photo)
                 .map((photo, index) => (
                   <img
                     key={index}
                     src={photo}
                     alt={`Vue ${index + 2}`}
                     className="img-thumbnail"
-                    style={{ width: '150px', height: '100px', objectFit: 'cover' }}
+                    style={{
+                      width: "150px",
+                      height: "100px",
+                      objectFit: "cover",
+                    }}
                     onError={(e) => {
                       console.error(`Erreur de chargement de l'image:`, photo);
-                      e.target.src = '/src/assets/placeholder.png';
+                      e.target.src = "/src/assets/placeholder.png";
                     }}
                   />
                 ))}
@@ -262,13 +285,13 @@ function DetailVehicule() {
             <div className="space-y-4">
               <p className="text-lg">
                 <span className="font-bold">Vendeur: </span>
-                {vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
-                  `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
-                  'M-Motors'}
+                {vehicule.vendeur_prenom && vehicule.vendeur_nom
+                  ? `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}`
+                  : "M-Motors"}
               </p>
               <p className="text-lg">
                 <span className="font-bold">Prix: </span>
-                {vehicule.prix} {vehicule.type ? '€' : '€/mois'}
+                {vehicule.prix} {vehicule.type ? "€" : "€/mois"}
               </p>
               <p className="text-lg">
                 <span className="font-bold">Kilométrage: </span>
@@ -280,7 +303,7 @@ function DetailVehicule() {
               </p>
               <p className="text-lg">
                 <span className="font-bold">Type: </span>
-                {vehicule.type ? 'À vendre' : 'À louer'}
+                {vehicule.type ? "À vendre" : "À louer"}
               </p>
             </div>
             <div className="mt-6">
@@ -300,9 +323,7 @@ function DetailVehicule() {
         <div className="col-12">
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-xl font-bold mb-4">Description détaillée :</h3>
-            <p className="text-gray-700">
-              {vehicule.description}
-            </p>
+            <p className="text-gray-700">{vehicule.description}</p>
           </div>
         </div>
       </div>

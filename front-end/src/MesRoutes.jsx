@@ -21,19 +21,19 @@ export default function MesRoutes() {
         <Header />
         <main className="p-4">
           <Routes>
-              <Route path="/" element={<Accueil/>} />
-              <Route path="register-page" element={<Register />} />
-              <Route path="login-page" element={<Login/>} />
-              <Route path="profile-page" element={<Profile/>} />
-              <Route path="vehicle-details" element={<VehicleDetails/>} />
-              <Route path="addVehicule" element={<AddVehicule />} />
-              <Route path="vehicules" element={<ListVehicules />} />
-              <Route path="vehicules/:id" element={<DetailVehicule />} />
-              <Route path="annonce" element={<Annonce />} />  
-              <Route path="acheter-page" element={<Acheter />} />
-              <Route path="louer-page" element={<Louer />} />
-              <Route path="update-profile" element={<UpdateProfile />} />
-              <Route path="*" element={<PageFound />} />
+            <Route path="/" element={<Accueil />} />
+            <Route path="register-page" element={<Register />} />
+            <Route path="login-page" element={<Login />} />
+            <Route path="profile-page" element={<Profile />} />
+            <Route path="vehicle-details" element={<VehicleDetails />} />
+            <Route path="addVehicule" element={<AddVehicule />} />
+            <Route path="vehicules" element={<ListVehicules />} />
+            <Route path="vehicules/:id" element={<DetailVehicule />} />
+            <Route path="annonce" element={<Annonce />} />
+            <Route path="acheter-page" element={<Acheter />} />
+            <Route path="louer-page" element={<Louer />} />
+            <Route path="update-profile" element={<UpdateProfile />} />
+            <Route path="*" element={<PageFound />} />
           </Routes>
         </main>
       </div>
