@@ -356,3 +356,61 @@ def save_devis(vehicule_id, pdf_data):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def filter_vehicles():
+    try:
+        # Récupérer les paramètres de filtrage depuis l'URL
+        marque = request.args.get('marque')
+        modele = request.args.get('modele')
+        energie = request.args.get('energie')
+        prix_max = request.args.get('prix')
+        km_max = request.args.get('kilometrage')
+
+        cursor = db.cursor(dictionary=True)
+        
+        # Construction de la requête de base
+        query = """
+            SELECT v.*, u.nom as vendeur_nom, u.prenom as vendeur_prenom
+            FROM vehicules v 
+            JOIN users u ON v.user_id = u.id 
+            WHERE 1=1
+        """
+        params = []
+
+        # Ajout des conditions de filtrage
+        if marque:
+            query += " AND v.marque = %s"
+            params.append(marque)
+        
+        if modele:
+            query += " AND v.modele = %s"
+            params.append(modele)
+            
+        if energie:
+            query += " AND v.energie = %s"
+            params.append(energie)
+            
+        if prix_max:
+            query += " AND v.prix <= %s"
+            params.append(float(prix_max))
+            
+        if km_max:
+            query += " AND v.kilometrage <= %s"
+            params.append(int(km_max))
+
+        cursor.execute(query, tuple(params))
+        vehicles = cursor.fetchall()
+
+        # Transformation des chemins d'images pour correspondre à votre structure
+        for vehicle in vehicles:
+            for i in range(1, 6):
+                photo_key = f'photo{i}'
+                if vehicle.get(photo_key):
+                    vehicle[photo_key] = os.path.join('uploads', os.path.basename(vehicle[photo_key]))
+        
+        return jsonify(vehicles)
+
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

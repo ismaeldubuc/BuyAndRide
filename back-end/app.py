@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id
+from fonction import filter_vehicles, register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id
 from dotenv import load_dotenv
 import os
 
@@ -98,6 +98,9 @@ def save_devis_route(vehicule_id):
     if not request.data:
         return jsonify({"error": "Aucune donnée PDF fournie"}), 400
     return save_devis(vehicule_id, request.data)
+@app.route("/api/filter-vehicles", methods=["GET"])
+def filter_vehicles_func():
+    return filter_vehicles()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
