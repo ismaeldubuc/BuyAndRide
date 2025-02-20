@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 from flask_cors import CORS
 import time
+import json
 
 load_dotenv()
 
@@ -35,7 +36,7 @@ def get_db_connection():
         port='5432',
         database='groupe4',
         user='postgres',
-        password='LeContinent!'  # Utiliser dotenv pour le mot de passe en production
+        password='LeContinent!'
     )
     return conn
 
@@ -121,22 +122,30 @@ def get_vehicle():
         cursor.close()
         
 def get_vehicle_by_id(id):
-    cursor = db.cursor(dictionary=True)
-
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
     try:
         query = """
-            SELECT * 
-            FROM vehicules
-            WHERE id = %s
+            SELECT v.*, u.nom as vendeur_nom, u.prenom as vendeur_prenom 
+            FROM vehicules v 
+            JOIN users u ON v.user_id = u.id 
+            WHERE v.id = %s
         """
         cursor.execute(query, (id,))
         vehicle = cursor.fetchone()
-
-        return jsonify(vehicle), 200
-
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
-
+        if vehicle is None:
+            return jsonify({"error": "Vehicle not found"}), 404
+            
+        vehicle_dict = dict(vehicle)
+        # Transformer les chemins d'images
+        for i in range(1, 6):
+            photo_key = f'photo{i}'
+            if vehicle_dict.get(photo_key):
+                vehicle_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicle_dict[photo_key]))
+                
+        return jsonify(vehicle_dict)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
@@ -183,27 +192,82 @@ def login():
         cursor.close()
         conn.close()
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 def profile():
+    logging.debug("Checking if user is authenticated")
     if 'user_id' not in session:
+        logging.debug("No user_id in session")
         return jsonify({"error": "Utilisateur non authentifié"}), 401
+
+    user_id = session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
+
     try:
-        if request.method == 'GET':
-            cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (session['user_id'],))
-            user = cursor.fetchone()
-            return jsonify(user)
-        elif request.method == 'POST':
-            data = request.get_json()
-            new_mdp = data.get('new_mdp')
-            confirm_mdp = data.get('confirm_mdp')
-            if new_mdp != confirm_mdp:
-                return jsonify({"error": "Les mots de passe ne correspondent pas"}), 400
-            new_mdp_hash = bcrypt.generate_mdp_hash(new_mdp).decode('utf-8')
-            cursor.execute("UPDATE users SET mdp = %s WHERE id = %s", (new_mdp_hash, session['user_id']))
-            conn.commit()
-            return jsonify({"message": "Mot de passe mis à jour avec succès"}), 200
+        logging.debug(f"Fetching user data for user_id: {user_id}")
+        cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            logging.debug("User not found in database")
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        logging.debug("User data retrieved successfully")
+        user_json = json.dumps(user, indent=4)
+        logging.debug("JSON data to be returned: " + user_json)
+        return jsonify(user)
+    except Exception as e:
+        logging.error(f"Error retrieving user data: {str(e)}")
+        return jsonify({"error": "Erreur lors de la récupération des données : " + str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+def modif_profil():
+    logging.debug("Checking if user is authenticated")
+    if 'user_id' not in session:
+        logging.debug("No user_id in session")
+        return jsonify({"error": "Utilisateur non authentifié"}), 401
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+
+    try:
+        if request.method == 'POST':
+            if 'changer_mdp' in request.form:
+                # Changement de mot de passe
+                new_password = request.form.get('new_password')
+                confirm_password = request.form.get('confirm_password')
+
+                if new_password != confirm_password:
+                    logging.debug("Passwords do not match")
+                    return jsonify({"error": "Les mots de passe ne correspondent pas"}), 400
+
+                new_password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
+                cursor.execute("UPDATE users SET mdp = %s WHERE id = %s", (new_password_hash, user_id))
+                conn.commit()
+                logging.debug("Password updated successfully")
+                return jsonify({"message": "Mot de passe mis à jour avec succès"}), 200
+
+            else:
+                # Modification des infos du profil
+                nom = request.form.get('nom')
+                prenom = request.form.get('prenom')
+                email = request.form.get('email')
+
+                cursor.execute("UPDATE users SET nom=%s, prenom=%s, email=%s WHERE id=%s",
+                               (nom, prenom, email, user_id))
+                conn.commit()
+                logging.debug("Profile updated successfully")
+                return jsonify({"message": "Profil mis à jour avec succès"}), 200
+
+    except Exception as e:
+        logging.error(f"Error processing request: {str(e)}")
+        return jsonify({"error": "Erreur lors de la mise à jour des données : " + str(e)}), 500
     finally:
         cursor.close()
         conn.close()
@@ -284,8 +348,7 @@ def save_devis(vehicule_id, pdf_data):
         conn.commit()
         return jsonify({"message": "Devis enregistré avec succès", "pdf_path": os.path.join('uploads/devis', filename)}), 201
     except Exception as e:
-        return jsonify({"error": str
-                        (e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 def filter_vehicules():
     marque = request.args.get('marque')
@@ -373,38 +436,42 @@ def get_louer_vehicule():
         cursor.close()
     
 def get_marques():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
     try:
-        cursor = mysql.connection.cursor()
         cursor.execute("SELECT DISTINCT marque FROM vehicules ORDER BY marque")
         marques = [row[0] for row in cursor.fetchall()]
-        cursor.close()
         return jsonify(marques)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
     
 def get_modeles(marque):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
     try:
-        cursor = mysql.connection.cursor()
         cursor.execute("SELECT DISTINCT modele FROM vehicules WHERE marque = %s ORDER BY modele", (marque,))
         modeles = [row[0] for row in cursor.fetchall()]
-        cursor.close()
         return jsonify(modeles)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+    finally:
+        cursor.close()
+        conn.close()
 
 def filter_vehicles():
     try:
-        # Récupérer les paramètres de filtrage depuis l'URL
         marque = request.args.get('marque')
         modele = request.args.get('modele')
         energie = request.args.get('energie')
         prix_max = request.args.get('prix')
         km_max = request.args.get('kilometrage')
 
-        cursor = db.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
         
-        # Construction de la requête de base
         query = """
             SELECT v.*, u.nom as vendeur_nom, u.prenom as vendeur_prenom
             FROM vehicules v 
@@ -413,7 +480,6 @@ def filter_vehicles():
         """
         params = []
 
-        # Ajout des conditions de filtrage
         if marque:
             query += " AND v.marque = %s"
             params.append(marque)
@@ -437,19 +503,22 @@ def filter_vehicles():
         cursor.execute(query, tuple(params))
         vehicles = cursor.fetchall()
 
-        # Transformation des chemins d'images pour correspondre à votre structure
+        # Convertir les résultats en liste de dictionnaires
+        vehicles_list = []
         for vehicle in vehicles:
+            vehicle_dict = dict(vehicle)
+            # Transformer les chemins d'images
             for i in range(1, 6):
                 photo_key = f'photo{i}'
-                if vehicle.get(photo_key):
-                    vehicle[photo_key] = os.path.join('uploads', os.path.basename(vehicle[photo_key]))
+                if vehicle_dict.get(photo_key):
+                    vehicle_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicle_dict[photo_key]))
+            vehicles_list.append(vehicle_dict)
         
-        return jsonify(vehicles)
+        return jsonify(vehicles_list)
 
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
+    except psycopg2.Error as e:
+        return jsonify({"error": str(e)}), 500
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
