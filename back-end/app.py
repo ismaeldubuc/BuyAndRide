@@ -14,6 +14,8 @@ from flask_session import Session
 from redis import Redis
 from flask_talisman import Talisman
 from logging.handlers import RotatingFileHandler
+from flask_compress import Compress
+from datetime import datetime
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -27,10 +29,15 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 CORS(app, resources={r"/api/*": {
-    "origins": "https://main.d3bzhfj3yrtaed.amplifyapp.com",
-    "methods": ["GET", "POST", "PUT", "DELETE"],
+    "origins": [
+        "https://main.d3bzhfj3yrtaed.amplifyapp.com",
+        "https://amplify.d3bzhfj3yrtaed.amplifyapp.com"
+    ],
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-    "supports_credentials": True
+    "supports_credentials": True,
+    "expose_headers": ["Content-Type", "Authorization"],
+    "max_age": 600
 }})
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
@@ -54,6 +61,8 @@ Talisman(app,
     }
 )
 
+Compress(app)
+
 # Configuration de la connexion à PostgreSQL
 def get_db_connection():
     try:
@@ -75,15 +84,15 @@ def home():
     return "Hello, World!"
 
 # Routes
-@app.route('/register', methods=['POST'])
-def register_route():
-    return register()
-
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login_route():
     return login()
 
-@app.route('/profile', methods=['GET'])
+@app.route('/api/register', methods=['POST'])
+def register_route():
+    return register()
+
+@app.route('/api/profile', methods=['GET'])
 def profile_route():
     return profile()
 
@@ -189,6 +198,20 @@ def handle_error(error):
     if hasattr(error, 'code'):
         return jsonify(response), error.code
     return jsonify(response), 500
+
+@app.route('/health')
+def health_check():
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({
+        "error": "Not Found",
+        "message": "The requested URL was not found on the server."
+    }), 404
 
 if not app.debug:
     file_handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
