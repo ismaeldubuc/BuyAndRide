@@ -1,3 +1,4 @@
+import time
 from flask import Flask, request, jsonify, session
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required,get_jwt_identity
 from flask_bcrypt import Bcrypt
@@ -179,9 +180,20 @@ def login():
     if user and bcrypt.check_password_hash(user['password'], password):
         
         session['user_id'] = user['id']
+        print("mes sessions", session)
         return jsonify({"message": "Connexion réussie"}), 200  # ✅ Retourne un JSON
 
     return jsonify({"message": "Identifiants incorrects"}), 401  # ✅ Retourne un JSON pour le frontend
+
+
+# /////////////////////////////
+
+def check_login():
+    if 'user_id' in session:
+        return jsonify({"isAuthenticated": True, "user_id": session['user_id']}), 200
+    return jsonify({"isAuthenticated": False}), 401
+
+# /////////////////////////////
 
 def profile():
     """ Route pour afficher et modifier les informations de l'utilisateur """

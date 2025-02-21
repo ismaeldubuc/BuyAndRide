@@ -35,7 +35,7 @@ function Annonce() {
     });
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/vehicules", {
+      const response = await fetch("http://127.0.0.1:8000/vehicules", {
         method: "POST",
         body: data,
         credentials: "include", // Indispensable pour envoyer les cookies de session

@@ -9,6 +9,7 @@ import ListVehicules from "./components/ListVehicules";
 import DetailVehicule from "./components/DetailVehicule";
 import Annonce from "./components/Annonce";
 import Accueil from "./components/Accueil";
+import UpdateProfile from "./components/UpdateProfile";
 
 export default function MesRoutes() {
   return (
@@ -22,7 +23,7 @@ export default function MesRoutes() {
         <Route path="vehicules" element={<ListVehicules />} />
         <Route path="vehicules/:id" element={<DetailVehicule />} />
         <Route path="annonce" element={<Annonce />} />
-
+        <Route path="update-profile" element={<UpdateProfile />} />
         <Route path="*" element={<PageFound />} />
       </Routes>
     </BrowserRouter>
