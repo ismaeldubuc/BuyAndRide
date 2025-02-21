@@ -13,20 +13,6 @@ from app import get_db_connection
 
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {
-    "origins": [
-        "https://main.d3bzhfj3yrtaed.amplifyapp.com",
-        "https://amplify.d3bzhfj3yrtaed.amplifyapp.com"
-    ],
-    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-    "supports_credentials": True,
-    "expose_headers": ["Content-Type", "Authorization"],
-    "max_age": 600,
-    "allow_redirects": True
-}})
-
 def create_vehicle():
     data = request.json
     conn = get_db_connection()
@@ -176,13 +162,17 @@ def login():
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
         if user and bcrypt.check_password_hash(user['mdp'], password):
+            session.clear()  # Clear any existing session
             session['user_id'] = user['id']
             access_token = create_access_token(identity=user['id'])
-            return jsonify({
+            response = jsonify({
                 "message": "Connexion réussie",
                 "token": access_token
-            }), 200
+            })
+            return response, 200
         return jsonify({"message": "Identifiants incorrects"}), 401
+    except Exception as e:
+        return jsonify({"message": f"Erreur serveur: {str(e)}"}), 500
     finally:
         cursor.close()
         conn.close()

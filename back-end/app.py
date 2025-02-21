@@ -214,14 +214,14 @@ def health_check():
 def not_found_error(error):
     return jsonify({
         "error": "Not Found",
-        "message": "The requested URL was not found on the server."
+        "message": "La ressource demandée n'existe pas"
     }), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({
         "error": "Internal Server Error",
-        "message": "An internal server error occurred."
+        "message": "Une erreur interne s'est produite"
     }), 500
 
 if not app.debug:
