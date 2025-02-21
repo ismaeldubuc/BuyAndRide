@@ -125,58 +125,82 @@ def get_vehicle_by_id(id):
         conn.close()
 
 def register():
-    if request.method == 'POST':
-        data = request.json
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Données JSON manquantes"}), 400
+            
         nom = data.get('nom')
         prenom = data.get('prenom')
         email = data.get('email')
         password = data.get('password')
-
-        # Utilisation de la méthode correcte pour générer le hash du mot de passe
-        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-
+        
+        if not all([nom, prenom, email, password]):
+            return jsonify({"message": "Tous les champs sont requis"}), 400
+            
         conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute("INSERT INTO users (nom, prenom, email, mdp) VALUES (%s, %s, %s, %s)", (nom, prenom, email, password_hash))
-            conn.commit()
-            return jsonify({"message": "Inscription réussie"}), 201
-        except Exception as e:
-            conn.rollback()
-            return jsonify({"error": str(e)}), 400
-        finally:
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        # Vérifier si l'email existe déjà
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"message": "Cet email est déjà utilisé"}), 409
+            
+        # Hasher le mot de passe
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        
+        # Insérer le nouvel utilisateur
+        cursor.execute(
+            "INSERT INTO users (nom, prenom, email, mdp) VALUES (%s, %s, %s, %s)",
+            (nom, prenom, email, hashed_password)
+        )
+        conn.commit()
+        
+        return jsonify({"message": "Inscription réussie"}), 201
+        
+    except Exception as e:
+        return jsonify({"message": f"Erreur serveur: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals():
             cursor.close()
+        if 'conn' in locals():
             conn.close()
 
 
 def login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    
-    if not email or not password:
-        return jsonify({"message": "Email et mot de passe requis"}), 400
-        
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=DictCursor)
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Données JSON manquantes"}), 400
+            
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({"message": "Email et mot de passe requis"}), 400
+            
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
+        
         if user and bcrypt.check_password_hash(user['mdp'], password):
-            session.clear()  # Clear any existing session
+            session.clear()
             session['user_id'] = user['id']
             access_token = create_access_token(identity=user['id'])
-            response = jsonify({
+            return jsonify({
                 "message": "Connexion réussie",
                 "token": access_token
-            })
-            return response, 200
+            }), 200
         return jsonify({"message": "Identifiants incorrects"}), 401
     except Exception as e:
         return jsonify({"message": f"Erreur serveur: {str(e)}"}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
 
 import logging
 
