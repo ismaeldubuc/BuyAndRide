@@ -32,11 +32,11 @@ CORS(app, resources={r"/api/*": {
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            host='hetic.cd5ufp6fsve3.us-east-1.rds.amazonaws.com',
-            port='5432',
-            database='groupe4',
-            user='postgres',
-            password='LeContinent!'
+            host=os.getenv('PG_HOST'),
+            port=os.getenv('PG_PORT'),
+            database=os.getenv('PG_DB'),
+            user=os.getenv('PG_USER'),
+            password=os.getenv('PG_PASSWORD')
         )
         return conn
     except psycopg2.Error as e:
@@ -204,34 +204,6 @@ def modif_profil():
 def logout():
     session.pop('user_id', None)
     return jsonify({"message": "Déconnexion réussie"}), 200
-
-def list_vehicules():
-    if 'user_id' not in session:
-        return jsonify({"error": "Authentication required"}), 401
-    try:
-        query = "SELECT * FROM vehicules WHERE user_id = %s"
-        vehicules = execute_query(query, (session['user_id'],))
-        return jsonify(vehicules)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-def add_vehicule():
-    if 'user_id' not in session:
-        return jsonify({"error": "Authentication required"}), 401
-    try:
-        data = request.json
-        query = """
-            INSERT INTO vehicules (user_id, marque, modele, prix, kilometrage, energie, type, description, 
-                                 photo1, photo2, photo3, photo4, photo5) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        params = (session['user_id'], data['marque'], data['modele'], data['prix'], 
-                 data['kilometrage'], data['energie'], data['type'], data['description'],
-                 data['photo1'], data['photo2'], data['photo3'], data['photo4'], data['photo5'])
-        execute_query(query, params, fetch=False)
-        return jsonify({"message": "Vehicle added successfully"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 def get_vehicule(id):
     try:
