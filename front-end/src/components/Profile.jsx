@@ -67,7 +67,7 @@ function Profile() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/modif_profil", {
+      const response = await fetch(`${API_URL}/modif_profil`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -99,7 +99,7 @@ function Profile() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/modif_profil", {
+      const response = await fetch(`${API_URL}/modif_profil`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -127,7 +127,7 @@ function Profile() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8000/logout", {
+      const response = await fetch(`${API_URL}/logout`, {
         method: "POST",
         credentials: "include",
       });
