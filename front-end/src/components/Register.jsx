@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.svg"
+import { API_URL } from '../config';
 
 function Register() {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +38,7 @@ function Register() {
     formBody.append("password", formData.password);
   
     try {
-      const response = await fetch("http://localhost:8000/register", {
+      const response = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

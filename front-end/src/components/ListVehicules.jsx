@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { API_URL, STATIC_URL } from '../config';
 
 export default function ListVehicules() {
   const [vehicules, setVehicules] = useState([]);
@@ -10,7 +11,7 @@ export default function ListVehicules() {
   useEffect(() => {
     const fetchVehicules = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/vehicules`, {
+        const response = await axios.get(`${API_URL}/vehicules`, {
           withCredentials: true,
         });
         console.log("response:", response.data);
@@ -32,7 +33,7 @@ export default function ListVehicules() {
             className="bg-white rounded-lg shadow-md overflow-hidden"
           >
             <img
-              src={`http://localhost:8000/static/${vehicule.photo1}`}
+              src={`${STATIC_URL}/${vehicule.photo1}`}
               alt={`${vehicule.marque} ${vehicule.modele}`}
               className="w-full h-48 object-cover"
             />
