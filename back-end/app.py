@@ -4,9 +4,13 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil
+from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle, save_devis, list_vehicules, get_vehicule, add_vehicule, get_vehicle_by_id, update_etat_vehicule, get_achat_vehicule, get_louer_vehicule, filter_vehicules, get_marques, get_modeles, modif_profil
 from dotenv import load_dotenv
 import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
@@ -23,21 +27,25 @@ CORS(app, resources={r"/api/*": {
     "supports_credentials": True
 }})
 
-
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 # Configuration de la connexion à PostgreSQL
 def get_db_connection():
-    conn = psycopg2.connect(
-        host=os.getenv('PG_HOST', 'hetic.cd5ufp6fsve3.us-east-1.rds.amazonaws.com'),
-        port=os.getenv('PG_PORT', '5432'),
-        database=os.getenv('PG_DB', 'groupe4'),
-        user=os.getenv('PG_USER', 'postgres'),
-        password=os.getenv('PG_PASSWORD', 'LeContinent!')
-    )
-    return conn
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv('PG_HOST', 'hetic.cd5ufp6fsve3.us-east-1.rds.amazonaws.com'),
+            port=os.getenv('PG_PORT', '5432'),
+            database=os.getenv('PG_DB', 'groupe4'),
+            user=os.getenv('PG_USER', 'postgres'),
+            password=os.getenv('PG_PASSWORD', 'LeContinent!')
+        )
+        logging.info("Database connection successful")
+        return conn
+    except Exception as e:
+        logging.error(f"Database connection failed: {str(e)}")
+        raise
 
 @app.route("/")
 def home():
@@ -134,4 +142,5 @@ def get_modeles_route(marque):
     return get_modeles(marque)
 
 if __name__ == "__main__":
+    logging.info("Starting Flask application...")
     app.run(host="0.0.0.0", port=8000, debug=True)
