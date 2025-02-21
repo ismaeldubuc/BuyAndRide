@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil
+from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_type_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil
 from dotenv import load_dotenv
 import os
 
@@ -74,13 +74,13 @@ def get_vehicule_route(id):
 def serve_image(filename):
     return send_from_directory('static/uploads', filename)
 
-@app.route("/api/update-vehicle", methods=["PUT"])
-def update_vehicle_func():
-    return update_vehicle()
+@app.route("/api/update-vehicle/<int:id>", methods=["PUT"])
+def update_vehicle_func(id):
+    return update_vehicle(id)
 
-@app.route("/api/delete-vehicle", methods=["DELETE"])
-def delete_vehicle_func():
-    return delete_vehicle()
+@app.route("/api/delete-vehicle/<int:id>", methods=["DELETE"])
+def delete_vehicle_func(id):
+    return delete_vehicle(id)
 
 @app.route("/api/get-vehicle", methods=["GET"])
 def get_vehicle_func():
@@ -103,9 +103,9 @@ def save_devis_route(vehicule_id):
 def filter_vehicles_func():
     return filter_vehicles()
 
-@app.route('/api/update-etat-vehicule', methods=['PUT'])
-def update_etat_vehicule_route():
-    return update_etat_vehicule()
+@app.route('/api/update-type-vehicule/<int:id>', methods=['PUT'])
+def update_etat_type_route(id):
+    return update_type_vehicule(id)
 
 @app.route('/api/get-achat-vehicule', methods=['GET'])
 def get_achat_vehicule_route():
