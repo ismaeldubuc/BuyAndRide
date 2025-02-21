@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Blueprint
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -28,7 +28,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-CORS(app, resources={r"/api/*": {
+CORS(app, resources={r"/*": {
     "origins": [
         "https://main.d3bzhfj3yrtaed.amplifyapp.com",
         "https://amplify.d3bzhfj3yrtaed.amplifyapp.com"
@@ -37,7 +37,8 @@ CORS(app, resources={r"/api/*": {
     "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
     "supports_credentials": True,
     "expose_headers": ["Content-Type", "Authorization"],
-    "max_age": 600
+    "max_age": 600,
+    "allow_redirects": True
 }})
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
@@ -83,93 +84,96 @@ def get_db_connection():
 def home():
     return "Hello, World!"
 
+api = Blueprint('api', __name__, url_prefix='/api')
+
 # Routes
-@app.route('/api/login', methods=['POST'])
+@api.route('/login', methods=['POST'])
 def login_route():
     return login()
 
-@app.route('/api/register', methods=['POST'])
+@api.route('/register', methods=['POST'])
 def register_route():
     return register()
 
-@app.route('/api/profile', methods=['GET'])
+@api.route('/profile', methods=['GET'])
 def profile_route():
     return profile()
 
-@app.route('/modif_profil', methods=['POST'])
+@api.route('/modif_profil', methods=['POST'])
 def modif_profil_route():
     return modif_profil()
 
-@app.route('/logout', methods=['POST'])
+@api.route('/logout', methods=['POST'])
 def logout_route():
     return logout()
 
-@app.route("/api/create-vehicle", methods=["POST"])
+@api.route("/create-vehicle", methods=["POST"])
 def create_vehicle_func():
     return create_vehicle()
 
-@app.route('/vehicules', methods=['GET'])
+@api.route('/vehicules', methods=['GET'])
 def list_vehicules_route():
     return list_vehicules()
 
-@app.route('/vehicules/<int:id>', methods=['GET'])
+@api.route('/vehicules/<int:id>', methods=['GET'])
 def get_vehicule_route(id):
     return get_vehicule(id)
 
-@app.route('/static/uploads/<path:filename>')
+@api.route('/static/uploads/<path:filename>')
 def serve_image(filename):
     return send_from_directory('static/uploads', filename)
 
-@app.route("/api/update-vehicle", methods=["PUT"])
+@api.route("/update-vehicle", methods=["PUT"])
 def update_vehicle_func():
     return update_vehicle()
 
-@app.route("/api/delete-vehicle", methods=["DELETE"])
+@api.route("/delete-vehicle", methods=["DELETE"])
 def delete_vehicle_func():
     return delete_vehicle()
 
-@app.route("/api/get-vehicle", methods=["GET"])
+@api.route("/get-vehicle", methods=["GET"])
 def get_vehicle_func():
     return get_vehicle()
 
-@app.route("/api/get-vehicle/<int:id>", methods=["GET"])
+@api.route("/get-vehicle/<int:id>", methods=["GET"])
 def get_vehicle_by_id_func(id):
     return get_vehicle_by_id(id)
 
-@app.route('/vehicules', methods=['POST'])
+@api.route('/vehicules', methods=['POST'])
 def add_vehicule_route():
    return add_vehicule()
 
-@app.route('/api/devis/<int:vehicule_id>', methods=['POST'])
+@api.route('/devis/<int:vehicule_id>', methods=['POST'])
 def save_devis_route(vehicule_id):
     if not request.data:
         return jsonify({"error": "Aucune donnée PDF fournie"}), 400
     return save_devis(vehicule_id, request.data)
-@app.route("/api/filter-vehicles", methods=["GET"])
+
+@api.route("/filter-vehicles", methods=["GET"])
 def filter_vehicles_func():
     return filter_vehicles()
 
-@app.route('/api/update-etat-vehicule', methods=['PUT'])
+@api.route('/update-etat-vehicule', methods=['PUT'])
 def update_etat_vehicule_route():
     return update_etat_vehicule()
 
-@app.route('/api/get-achat-vehicule', methods=['GET'])
+@api.route('/get-achat-vehicule', methods=['GET'])
 def get_achat_vehicule_route():
     return get_achat_vehicule()
 
-@app.route('/api/get-louer-vehicule', methods=['GET'])
+@api.route('/get-louer-vehicule', methods=['GET'])
 def get_louer_vehicule_route():
     return get_louer_vehicule()
 
-@app.route('/vehicules/filter', methods=['POST'])
+@api.route('/vehicules/filter', methods=['POST'])
 def filter_vehicules_route():
     return filter_vehicules()
 
-@app.route('/marques', methods=['GET'])
+@api.route('/marques', methods=['GET'])
 def get_marques_route():
     return get_marques()
 
-@app.route('/modeles/<marque>', methods=['GET'])
+@api.route('/modeles/<marque>', methods=['GET'])
 def get_modeles_route(marque):
     return get_modeles(marque)
 
@@ -189,7 +193,7 @@ def upload_file_to_s3(file, filename):
         print(e)
         return None
 
-@app.errorhandler(Exception)
+@api.errorhandler(Exception)
 def handle_error(error):
     response = {
         "error": str(error),
@@ -199,19 +203,26 @@ def handle_error(error):
         return jsonify(response), error.code
     return jsonify(response), 500
 
-@app.route('/health')
+@api.route('/health')
 def health_check():
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat()
     })
 
-@app.errorhandler(404)
+@api.errorhandler(404)
 def not_found_error(error):
     return jsonify({
         "error": "Not Found",
         "message": "The requested URL was not found on the server."
     }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({
+        "error": "Internal Server Error",
+        "message": "An internal server error occurred."
+    }), 500
 
 if not app.debug:
     file_handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
@@ -222,6 +233,8 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
     app.logger.info('Application startup')
+
+app.register_blueprint(api)
 
 if __name__ == "__main__":
     logging.info("Starting Flask application...")

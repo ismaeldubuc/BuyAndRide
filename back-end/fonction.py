@@ -22,11 +22,17 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {
-    "origins": "https://main.d3bzhfj3yrtaed.amplifyapp.com",
-    "methods": ["GET", "POST", "PUT", "DELETE"],
+CORS(app, resources={r"/*": {
+    "origins": [
+        "https://main.d3bzhfj3yrtaed.amplifyapp.com",
+        "https://amplify.d3bzhfj3yrtaed.amplifyapp.com"
+    ],
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-    "supports_credentials": True
+    "supports_credentials": True,
+    "expose_headers": ["Content-Type", "Authorization"],
+    "max_age": 600,
+    "allow_redirects": True
 }})
 
 def create_vehicle():
@@ -167,15 +173,22 @@ def register():
 def login():
     data = request.get_json()
     email = data.get('email')
-    password = data.get('password')  # Assurez-vous que ceci correspond au nom de champ utilisé dans votre JSON de requête
+    password = data.get('password')
+    
+    if not email or not password:
+        return jsonify({"message": "Email et mot de passe requis"}), 400
+        
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     try:
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
-        if user and bcrypt.check_password_hash(user['mdp'], password):  # Utilisez la méthode correcte ici
-            session['user_id'] = user['id']
-            return jsonify({"message": "Connexion réussie"}), 200
+        if user and bcrypt.check_password_hash(user['mdp'], password):
+            access_token = create_access_token(identity=user['id'])
+            return jsonify({
+                "message": "Connexion réussie",
+                "token": access_token
+            }), 200
         return jsonify({"message": "Identifiants incorrects"}), 401
     finally:
         cursor.close()
