@@ -28,6 +28,24 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
+api = Blueprint('api', __name__, url_prefix='/api')
+
+@api.route('/login', methods=['POST'])
+def login_route():
+    return login()
+
+@api.route('/register', methods=['POST'])
+def register_route():
+    return register()
+
+@api.route('/logout', methods=['POST'])
+def logout_route():
+    return logout()
+
+@api.route('/modif_profil', methods=['POST'])
+def modif_profil_route():
+    return modif_profil()
+
 CORS(app, resources={r"/*": {
     "origins": [
         "https://main.d3bzhfj3yrtaed.amplifyapp.com",
@@ -84,28 +102,10 @@ def get_db_connection():
 def home():
     return "Hello, World!"
 
-api = Blueprint('api', __name__, url_prefix='/api')
-
 # Routes
-@api.route('/login', methods=['POST'])
-def login_route():
-    return login()
-
-@api.route('/register', methods=['POST'])
-def register_route():
-    return register()
-
 @api.route('/profile', methods=['GET'])
 def profile_route():
     return profile()
-
-@api.route('/modif_profil', methods=['POST'])
-def modif_profil_route():
-    return modif_profil()
-
-@api.route('/logout', methods=['POST'])
-def logout_route():
-    return logout()
 
 @api.route("/create-vehicle", methods=["POST"])
 def create_vehicle_func():
