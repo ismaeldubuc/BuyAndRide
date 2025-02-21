@@ -5,9 +5,9 @@ const configs = {
   },
   production: {
     API_URL: 'https://main.d3bzhfj3yrtaed.amplifyapp.com/api',
-    STATIC_URL: 'https://votre-bucket-s3.s3.amazonaws.com'
+    STATIC_URL: 'https://main.d3bzhfj3yrtaed.amplifyapp.com/static'
   }
 };
 
-const environment = process.env.NODE_ENV || 'development';
+const environment = import.meta.env.PROD ? 'production' : 'development';
 export const { API_URL, STATIC_URL } = configs[environment];
