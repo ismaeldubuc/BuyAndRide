@@ -1,59 +1,37 @@
-import React from 'react'
+import React from "react";
+import Header from "./Header";
+import Footer from "./Footer";
 
 function Accueil() {
+
   return (
-    <div className="accueil-container" style={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      background: '#f5f5f5'
-    }}>
-      <h1 style={{ 
-        fontSize: '2.5rem', 
-        marginBottom: '2rem',
-        color: '#333'
-      }}>
-        Bienvenue sur Buy And Ride
-      </h1>
-      <div style={{
-        display: 'flex',
-        gap: '1rem'
-      }}>
-        <button 
-          style={{
-            padding: '0.8rem 2rem',
-            fontSize: '1.1rem',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s'
-          }}
-          onClick={() => window.location.href = '/login-page'}
-        >
-          Se connecter
-        </button>
-        <button 
-          style={{
-            padding: '0.8rem 2rem',
-            fontSize: '1.1rem',
-            backgroundColor: '#2196F3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s'
-          }}
-          onClick={() => window.location.href = '/register-page'}
-        >
-          S'inscrire
-        </button>
-      </div>
-    </div>
-  )
+    <>
+      <Header />
+      <main className="flex items-center justify-center min-h-screen  py-12 px-6">
+        <div className="container mx-auto flex flex-col md:flex-row items-center gap-12">
+          <div className="md:w-1/2 text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+              Bienvenue sur MMOTORS
+            </h1>
+            <p className="text-xl text-gray-600 leading-relaxed">
+              Votre destination premium pour découvrir les voitures d'exception.
+              Explorez notre sélection exclusive de véhicules de luxe et de
+              haute performance.
+            </p>
+          </div>
+          <div className="md:w-1/2">
+            <img
+              src="/src/assets/voiture.png"
+              alt="MMOTORS Luxury Car"
+              className="w-4/5 h-auto mx-auto rounded-lg shadow-2xl transform hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        </div>
+      </main>
+   
+  <Footer/>
+    </>
+  );
 }
 
-export default Accueil
+export default Accueil;

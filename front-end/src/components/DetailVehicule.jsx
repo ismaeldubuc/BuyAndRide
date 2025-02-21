@@ -30,149 +30,138 @@ export default function DetailVehicule() {
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    
-    // En-tête
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(24);
     doc.setTextColor(41, 128, 185);
     doc.text("BUY AND RIDE", 105, 15, { align: "center" });
 
-    // Sous-titre
     doc.setFontSize(18);
     doc.setTextColor(0, 0, 0);
     doc.text("Devis Véhicule", 105, 30, { align: "center" });
 
-    // Informations du vendeur
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text(`Vendeur: ${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}`, 15, 45);
+    doc.text(
+      `Vendeur: ${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}`,
+      15,
+      45
+    );
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 52);
 
-    // Tableau des caractéristiques
     autoTable(doc, {
-        startY: 60,
-        head: [["Caractéristiques", "Détails"]],
-        body: [
-            ["Marque", vehicule.marque],
-            ["Modèle", vehicule.modele],
-            ["Prix", `${vehicule.prix} €`],
-            ["Kilométrage", `${vehicule.kilometrage} km`],
-            ["Énergie", vehicule.energie],
-            ["Type", vehicule.type]
-        ],
-        theme: 'striped',
-        headStyles: { 
-            fillColor: [41, 128, 185],
-            textColor: [255, 255, 255],
-            fontSize: 12,
-            fontStyle: 'bold'
-        },
-        bodyStyles: {
-            fontSize: 11
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240]
-        }
+      startY: 60,
+      head: [["Caractéristiques", "Détails"]],
+      body: [
+        ["Marque", vehicule.marque],
+        ["Modèle", vehicule.modele],
+        ["Prix", `${vehicule.prix} €`],
+        ["Kilométrage", `${vehicule.kilometrage} km`],
+        ["Énergie", vehicule.energie],
+        ["Type", vehicule.type],
+      ],
+      theme: "striped",
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontSize: 12,
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        fontSize: 11,
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240],
+      },
     });
 
-    // Description
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 20);
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 30, {
-        maxWidth: 180
+      maxWidth: 180,
     });
 
-    // Photos
     let yPosition = doc.lastAutoTable.finalY + 60;
     const promises = [];
     const images = [
-        vehicule.photo1,
-        vehicule.photo2,
-        vehicule.photo3,
-        vehicule.photo4,
-        vehicule.photo5
+      vehicule.photo1,
+      vehicule.photo2,
+      vehicule.photo3,
+      vehicule.photo4,
+      vehicule.photo5,
     ].filter(Boolean);
 
     images.forEach((photo, index) => {
-        if (photo) {
-            promises.push(
-                new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = "Anonymous";
-                    img.onload = () => {
-                        if (yPosition > 250) {
-                            doc.addPage();
-                            yPosition = 20;
-                        }
-                        doc.addImage(
-                            img, 
-                            "JPEG", 
-                            15, 
-                            yPosition, 
-                            80, 
-                            60
-                        );
-                        yPosition += 70;
-                        resolve();
-                    };
-                    img.src = `http://localhost:5000/static/${photo}`;
-                })
-            );
-        }
+      if (photo) {
+        promises.push(
+          new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+              if (yPosition > 250) {
+                doc.addPage();
+                yPosition = 20;
+              }
+              doc.addImage(img, "JPEG", 15, yPosition, 80, 60);
+              yPosition += 70;
+              resolve();
+            };
+            img.src = `http://localhost:8000/static/${photo}`;
+          })
+        );
+      }
     });
 
-    // Conditions et mentions légales
     Promise.all(promises).then(() => {
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("Conditions du devis", 105, 20, { align: "center" });
-        
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        const conditions = [
-            "• Ce devis est valable 30 jours à compter de sa date d'émission",
-            "• Prix indiqué hors frais d'immatriculation et de mise en route",
-            "• Garantie selon conditions en vigueur",
-            "• Photos non contractuelles"
-        ];
-        
-        conditions.forEach((condition, index) => {
-            doc.text(condition, 15, 40 + (index * 10));
-        });
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Conditions du devis", 105, 20, { align: "center" });
 
-        // Signature
-        doc.text("Signature du vendeur:", 15, 230);
-        doc.text("Signature de l'acheteur:", 120, 230);
-        
-        // Pied de page
-        doc.setFontSize(8);
-        doc.text("Buy And Ride - Tous droits réservés", 105, 280, { align: "center" });
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      const conditions = [
+        "• Ce devis est valable 30 jours à compter de sa date d'émission",
+        "• Prix indiqué hors frais d'immatriculation et de mise en route",
+        "• Garantie selon conditions en vigueur",
+        "• Photos non contractuelles",
+      ];
 
-        // Envoi au backend et téléchargement
-        const pdfOutput = doc.output('arraybuffer');
-        
-        fetch(`http://localhost:5000/api/devis/${vehicule.id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/pdf',
-            },
-            body: pdfOutput,
-            credentials: 'include'
+      conditions.forEach((condition, index) => {
+        doc.text(condition, 15, 40 + index * 10);
+      });
+
+      doc.text("Signature du vendeur:", 15, 230);
+      doc.text("Signature de l'acheteur:", 120, 230);
+
+      doc.setFontSize(8);
+      doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
+        align: "center",
+      });
+
+      const pdfOutput = doc.output("arraybuffer");
+
+      fetch(`http://localhost:8000/api/devis/${vehicule.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/pdf",
+        },
+        body: pdfOutput,
+        credentials: "include",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("PDF sauvegardé:", data);
+          doc.save(`devis_${vehicule.marque}_${vehicule.modele}.pdf`);
         })
-        .then(response => response.json())
-        .then(data => {
-            console.log('PDF sauvegardé:', data);
-            doc.save(`devis_${vehicule.marque}_${vehicule.modele}.pdf`);
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
+        .catch((error) => {
+          console.error("Erreur:", error);
         });
     });
-};
+  };
 
   if (erreur) return <div className="text-red-500">{erreur}</div>;
   if (!vehicule) return <div>Chargement...</div>;
