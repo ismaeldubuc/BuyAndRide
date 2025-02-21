@@ -8,6 +8,12 @@ from fonction import register, login, profile, logout, create_vehicle, update_ve
 from dotenv import load_dotenv
 import os
 import logging
+import boto3
+from botocore.exceptions import ClientError
+from flask_session import Session
+from redis import Redis
+from flask_talisman import Talisman
+from logging.handlers import RotatingFileHandler
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +36,23 @@ CORS(app, resources={r"/api/*": {
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
+
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = Redis(
+    host=os.getenv('REDIS_HOST'),
+    port=os.getenv('REDIS_PORT'),
+    password=os.getenv('REDIS_PASSWORD')
+)
+Session(app)
+
+Talisman(app, 
+    content_security_policy={
+        'default-src': "'self'",
+        'img-src': ['*', 'data:', 'https:'],
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"]
+    }
+)
 
 # Configuration de la connexion à PostgreSQL
 def get_db_connection():
@@ -140,6 +163,42 @@ def get_marques_route():
 @app.route('/modeles/<marque>', methods=['GET'])
 def get_modeles_route(marque):
     return get_modeles(marque)
+
+s3_client = boto3.client('s3')
+BUCKET_NAME = 'votre-bucket-s3'
+
+def upload_file_to_s3(file, filename):
+    try:
+        s3_client.upload_fileobj(
+            file,
+            BUCKET_NAME,
+            filename,
+            ExtraArgs={'ACL': 'public-read'}
+        )
+        return f"https://{BUCKET_NAME}.s3.amazonaws.com/{filename}"
+    except ClientError as e:
+        print(e)
+        return None
+
+@app.errorhandler(Exception)
+def handle_error(error):
+    response = {
+        "error": str(error),
+        "message": "Une erreur s'est produite sur le serveur."
+    }
+    if hasattr(error, 'code'):
+        return jsonify(response), error.code
+    return jsonify(response), 500
+
+if not app.debug:
+    file_handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Application startup')
 
 if __name__ == "__main__":
     logging.info("Starting Flask application...")

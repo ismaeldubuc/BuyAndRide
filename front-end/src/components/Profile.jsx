@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from '../config';
 
 function Profile() {
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -27,7 +28,7 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("http://localhost:8000/profile", {
+        const response = await fetch(`${API_URL}/profile`, {
           method: "GET",
           credentials: "include",
           headers: {
