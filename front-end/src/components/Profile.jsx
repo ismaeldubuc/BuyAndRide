@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { API_URL } from '../config';
 
 function Profile() {
   const [vehicules, setVehicules] = useState([]);
@@ -15,7 +16,7 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("http://localhost:8000/profile", {
+        const response = await fetch(`${API_URL}/profile`, {
           method: "GET",
           credentials: "include",
           headers: {

@@ -5,6 +5,7 @@ import { BiSolidCarMechanic, BiGasPump } from 'react-icons/bi';
 import { TbWheel } from "react-icons/tb";
 import { BiEuro } from "react-icons/bi";
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const Acheter = () => {
     const [filtres, setFiltres] = useState({
@@ -23,7 +24,7 @@ const Acheter = () => {
     useEffect(() => {
         const chargerVehicules = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/get-vehicle', {
+                const response = await fetch(`${API_URL}/get-vehicle`, {
                     credentials: 'include'
                 });
                 if (response.ok) {
@@ -83,7 +84,7 @@ const Acheter = () => {
         });
 
         try {
-            const response = await fetch(`http://localhost:8000/api/filter-vehicles?${params}`, {
+            const response = await fetch(`${API_URL}/filter-vehicles?${params}`, {
                 method: 'GET',
                 credentials: 'include'
             });

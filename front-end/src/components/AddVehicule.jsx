@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { API_URL } from '../config'
 
 export default function AddVehicule() {
   const navigate = useNavigate()
@@ -49,7 +50,7 @@ export default function AddVehicule() {
     })
 
     try {
-      await axios.post('http://localhost:8000/vehicules', data, {
+      await axios.post(`${API_URL}/vehicules`, data, {
         withCredentials: true
       })
       setShowSuccess(true)

@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from "../assets/logo.svg"
+import { API_URL } from '../config'
+
 function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +29,7 @@ function Login() {
     setError('');
 
     try {
-      const response = await fetch('https://main.d3bzhfj3yrtaed.amplifyapp.com/api/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { API_URL, STATIC_URL } from '../config';
 
 export default function DetailVehicule() {
   const { id } = useParams();
@@ -13,7 +14,7 @@ export default function DetailVehicule() {
     const fetchVehicule = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/get-vehicle/${id}`,
+          `${API_URL}/get-vehicle/${id}`,
           { withCredentials: true }
         );
         console.log("Données reçues:", response.data);
@@ -95,24 +96,31 @@ export default function DetailVehicule() {
     ].filter(Boolean);
 
     images.forEach((photo, index) => {
-      if (photo) {
-        promises.push(
-          new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = () => {
-              if (yPosition > 250) {
-                doc.addPage();
-                yPosition = 20;
-              }
-              doc.addImage(img, "JPEG", 15, yPosition, 80, 60);
-              yPosition += 70;
-              resolve();
-            };
-            img.src = `http://localhost:8000/static/${photo}`;
-          })
-        );
-      }
+        if (photo) {
+            promises.push(
+                new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.onload = () => {
+                        if (yPosition > 250) {
+                            doc.addPage();
+                            yPosition = 20;
+                        }
+                        doc.addImage(
+                            img, 
+                            "JPEG", 
+                            15, 
+                            yPosition, 
+                            80, 
+                            60
+                        );
+                        yPosition += 70;
+                        resolve();
+                    };
+                    img.src = `${STATIC_URL}/${photo}`;
+                })
+            );
+        }
     });
 
     Promise.all(promises).then(() => {
@@ -174,7 +182,7 @@ export default function DetailVehicule() {
         <div className="col-8">
           <div className="carousel">
             <img 
-              src={`http://localhost:8000/static/${vehicule.photo1}`}
+              src={`${STATIC_URL}/${vehicule.photo1}`}
               className="d-block w-100" 
               alt={`${vehicule.marque} ${vehicule.modele}`}
               style={{ height: '600px', objectFit: 'cover' }}
@@ -185,7 +193,7 @@ export default function DetailVehicule() {
                 .map((photo, index) => (
                   <img
                     key={index}
-                    src={`http://localhost:8000/static/${photo}`}
+                    src={`${STATIC_URL}/${photo}`}
                     alt={`Vue ${index + 2}`}
                     className="img-thumbnail"
                     style={{ width: '150px', height: '100px', objectFit: 'cover' }}
