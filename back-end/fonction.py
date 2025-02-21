@@ -15,14 +15,6 @@ from app import get_db_connection
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'buyandride'
-bcrypt = Bcrypt(app)
-
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-
-app = Flask(__name__)
 CORS(app, resources={r"/*": {
     "origins": [
         "https://main.d3bzhfj3yrtaed.amplifyapp.com",
@@ -185,6 +177,7 @@ def login():
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
         if user and bcrypt.check_password_hash(user['mdp'], password):
+            session['user_id'] = user['id']
             access_token = create_access_token(identity=user['id'])
             return jsonify({
                 "message": "Connexion réussie",
