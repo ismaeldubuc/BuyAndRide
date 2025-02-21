@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import time
 import json
+from app import get_db_connection
 
 load_dotenv()
 
@@ -27,16 +28,6 @@ CORS(app, resources={r"/api/*": {
     "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
     "supports_credentials": True
 }})
-
-def get_db_connection():
-    conn = psycopg2.connect(
-        host='hetic.cd5ufp6fsve3.us-east-1.rds.amazonaws.com',
-        port='5432',
-        database='groupe4',
-        user='postgres',
-        password='LeContinent!'
-    )
-    return conn
 
 def create_vehicle():
     data = request.json
