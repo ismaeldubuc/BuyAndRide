@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil
+from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil,check_login
 from dotenv import load_dotenv
 import os
 
@@ -52,7 +52,11 @@ def register_route():
 def login_route():
     return login()
 
-@app.route('/profile', methods=['GET'])
+@app.route('/check-login', methods=['GET'])
+def check_login_route():
+    return check_login()
+
+@app.route('/profile', methods=['GET', 'POST'])
 def profile_route():
     return profile()
 

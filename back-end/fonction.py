@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify, session, send_from_directory
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import time
+from flask import Flask, request, jsonify, session , send_from_directory
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required,get_jwt_identity
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import psycopg2
@@ -193,6 +194,11 @@ def login():
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+    
+def check_login():
+    if 'user_id' in session:
+        return jsonify({"isAuthenticated": True, "user_id": session['user_id']}), 200
+    return jsonify({"isAuthenticated": False}), 401
 
 def profile():
     logging.debug("Checking if user is authenticated")
