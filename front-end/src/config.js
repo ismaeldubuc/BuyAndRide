@@ -4,8 +4,8 @@ const configs = {
     STATIC_URL: 'http://localhost:8000/static'
   },
   production: {
-    API_URL: 'https://main.d3bzhfj3yrtaed.amplifyapp.com/api',
-    STATIC_URL: 'https://main.d3bzhfj3yrtaed.amplifyapp.com/static'
+    API_URL: 'https://amplify.d3bzhfj3yrtaed.amplifyapp.com/api',
+    STATIC_URL: 'https://amplify.d3bzhfj3yrtaed.amplifyapp.com/static'
   }
 };
 
