@@ -38,23 +38,23 @@ def home():
     return "Hello, World!"
 
 # Routes
-@app.route('/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register_route():
     return register()
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login_route():
     return login()
 
-@app.route('/profile', methods=['GET'])
+@app.route('/api/profile', methods=['GET'])
 def profile_route():
     return profile()
 
-@app.route('/modif_profil', methods=['POST'])
+@app.route('/api/modif_profil', methods=['POST'])
 def modif_profil_route():
     return modif_profil()
 
-@app.route('/logout', methods=['POST'])
+@app.route('/api/logout', methods=['POST'])
 def logout_route():
     return logout()
 
@@ -62,11 +62,11 @@ def logout_route():
 def create_vehicle_func():
     return create_vehicle()
 
-@app.route('/vehicules', methods=['GET'])
+@app.route('/api/vehicules', methods=['GET'])
 def list_vehicules_route():
     return list_vehicules()
 
-@app.route('/vehicules/<int:id>', methods=['GET'])
+@app.route('/api/vehicules/<int:id>', methods=['GET'])
 def get_vehicule_route(id):
     return get_vehicule(id)
 
@@ -90,7 +90,7 @@ def get_vehicle_func():
 def get_vehicle_by_id_func(id):
     return get_vehicle_by_id(id)
 
-@app.route('/vehicules', methods=['POST'])
+@app.route('/api/vehicules', methods=['POST'])
 def add_vehicule_route():
    return add_vehicule()
 
@@ -115,15 +115,15 @@ def get_achat_vehicule_route():
 def get_louer_vehicule_route():
     return get_louer_vehicule()
 
-@app.route('/vehicules/filter', methods=['POST'])
+@app.route('/api/vehicules/filter', methods=['POST'])
 def filter_vehicules_route():
     return filter_vehicules()
 
-@app.route('/marques', methods=['GET'])
+@app.route('/api/marques', methods=['GET'])
 def get_marques_route():
     return get_marques()
 
-@app.route('/modeles/<marque>', methods=['GET'])
+@app.route('/api/modeles/<marque>', methods=['GET'])
 def get_modeles_route(marque):
     return get_modeles(marque)
 
