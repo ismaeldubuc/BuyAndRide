@@ -24,7 +24,7 @@ const Louer = () => {
     useEffect(() => {
         const chargerVehicules = async () => {
             try {
-                const response = await fetch(`${API_URL}/get-vehicle`, {
+                const response = await fetch('http://localhost:8000/api/get-louer-vehicule', {
                     credentials: 'include'
                 });
                 if (response.ok) {
@@ -78,14 +78,19 @@ const Louer = () => {
 
     const appliquerFiltres = async () => {
         const params = new URLSearchParams();
+        
+        // Ajouter type=false pour la page Louer
+        params.append('type', 'false');
+        
+        // Ajouter les autres filtres
         Object.entries(filtres).forEach(([key, value]) => {
-            if (value) {
+            if (value && key !== 'type') {  // Exclure le type car déjà ajouté
                 params.append(key, value);
             }
         });
 
         try {
-            const response = await fetch(`${API_URL}/filter-vehicles?${params}`, {
+            const response = await fetch(`http://localhost:8000/vehicules/filter?${params}`, {
                 method: 'GET',
                 credentials: 'include'
             });
@@ -235,7 +240,7 @@ const Louer = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <span className="font-semibold w-16"><BiEuro className="text-xl" /></span>
-                                            <span>{vehicule.prix.toLocaleString()} €</span>
+                                            <span>{vehicule.prix.toLocaleString()} €/mois</span>
                                         </div>
                                     </div>
                                     <button
