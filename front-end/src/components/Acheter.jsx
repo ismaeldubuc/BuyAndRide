@@ -23,7 +23,7 @@ const Acheter = () => {
     useEffect(() => {
         const chargerVehicules = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/get-vehicle', {
+                const response = await fetch('http://localhost:8000/api/get-achat-vehicule', {
                     credentials: 'include'
                 });
                 if (response.ok) {
@@ -76,14 +76,19 @@ const Acheter = () => {
 
     const appliquerFiltres = async () => {
         const params = new URLSearchParams();
+        
+        // Ajouter type=true pour la page Acheter
+        params.append('type', 'true');
+        
+        // Ajouter les autres filtres
         Object.entries(filtres).forEach(([key, value]) => {
-            if (value) {
+            if (value && key !== 'type') {  // Exclure le type car déjà ajouté
                 params.append(key, value);
             }
         });
 
         try {
-            const response = await fetch(`http://localhost:8000/api/filter-vehicles?${params}`, {
+            const response = await fetch(`http://localhost:8000/vehicules/filter?${params}`, {
                 method: 'GET',
                 credentials: 'include'
             });

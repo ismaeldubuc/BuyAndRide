@@ -109,9 +109,6 @@ def save_devis_route(vehicule_id):
     if not request.data:
         return jsonify({"error": "Aucune donnée PDF fournie"}), 400
     return save_devis(vehicule_id, request.data)
-@app.route("/api/filter-vehicles", methods=["GET"])
-def filter_vehicles_func():
-    return filter_vehicles()
 
 @app.route('/api/update-etat-vehicule', methods=['PUT'])
 def update_etat_vehicule_route():
