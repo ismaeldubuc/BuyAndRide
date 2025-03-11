@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import time
 import json
-from app import get_db_connection
+from database import get_db_connection
 
 load_dotenv()
 
