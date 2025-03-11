@@ -46,17 +46,13 @@ def logout_route():
 def modif_profil_route():
     return modif_profil()
 
-CORS(app, resources={r"/*": {
-    "origins": [
-        "https://main.d3bzhfj3yrtaed.amplifyapp.com",
-        "https://amplify.d3bzhfj3yrtaed.amplifyapp.com"
-    ],
+CORS(app, resources={r"/api/*": {
+    "origins": ["13.38.58.65"],
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
     "supports_credentials": True,
     "expose_headers": ["Content-Type", "Authorization"],
-    "max_age": 600,
-    "allow_redirects": True
+    "max_age": 600
 }})
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
@@ -66,7 +62,7 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_REDIS'] = Redis(
     host=os.getenv('REDIS_HOST'),
-    port=os.getenv('REDIS_PORT'),
+    port=int(os.getenv('REDIS_PORT', 6379)),
     password=os.getenv('REDIS_PASSWORD')
 )
 Session(app)
@@ -81,6 +77,9 @@ Talisman(app,
 )
 
 Compress(app)
+
+# Enregistrement du Blueprint
+app.register_blueprint(api)
 
 # Configuration de la connexion à PostgreSQL
 def get_db_connection():
@@ -245,8 +244,6 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
     app.logger.info('Application startup')
-
-app.register_blueprint(api)
 
 if __name__ == "__main__":
     logging.info("Starting Flask application...")
