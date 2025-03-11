@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory, Blueprint
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle, save_devis, list_vehicules, get_vehicule, add_vehicule, get_vehicle_by_id, update_etat_vehicule, get_achat_vehicule, get_louer_vehicule, filter_vehicules, get_marques, get_modeles, modif_profil
+import fonction
 from dotenv import load_dotenv
 import os
 import logging
@@ -16,6 +16,7 @@ from flask_talisman import Talisman
 from logging.handlers import RotatingFileHandler
 from flask_compress import Compress
 from datetime import datetime
+from database import get_db_connection
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -32,19 +33,19 @@ api = Blueprint('api', __name__, url_prefix='/api')
 
 @api.route('/login', methods=['POST'])
 def login_route():
-    return login()
+    return fonction.login()
 
 @api.route('/register', methods=['POST'])
 def register_route():
-    return register()
+    return fonction.register()
 
 @api.route('/logout', methods=['POST'])
 def logout_route():
-    return logout()
+    return fonction.logout()
 
 @api.route('/modif_profil', methods=['POST'])
 def modif_profil_route():
-    return modif_profil()
+    return fonction.modif_profil()
 
 CORS(app, resources={r"/api/*": {
     "origins": ["13.38.58.65"],
@@ -104,19 +105,19 @@ def home():
 # Routes
 @api.route('/profile', methods=['GET'])
 def profile_route():
-    return profile()
+    return fonction.profile()
 
 @api.route("/create-vehicle", methods=["POST"])
 def create_vehicle_func():
-    return create_vehicle()
+    return fonction.create_vehicle()
 
 @api.route('/vehicules', methods=['GET'])
 def list_vehicules_route():
-    return list_vehicules()
+    return fonction.list_vehicules()
 
 @api.route('/vehicules/<int:id>', methods=['GET'])
 def get_vehicule_route(id):
-    return get_vehicule(id)
+    return fonction.get_vehicule(id)
 
 @api.route('/static/uploads/<path:filename>')
 def serve_image(filename):
@@ -124,57 +125,57 @@ def serve_image(filename):
 
 @api.route("/update-vehicle", methods=["PUT"])
 def update_vehicle_func():
-    return update_vehicle()
+    return fonction.update_vehicle()
 
 @api.route("/delete-vehicle", methods=["DELETE"])
 def delete_vehicle_func():
-    return delete_vehicle()
+    return fonction.delete_vehicle()
 
 @api.route("/get-vehicle", methods=["GET"])
 def get_vehicle_func():
-    return get_vehicle()
+    return fonction.get_vehicle()
 
 @api.route("/get-vehicle/<int:id>", methods=["GET"])
 def get_vehicle_by_id_func(id):
-    return get_vehicle_by_id(id)
+    return fonction.get_vehicle_by_id(id)
 
 @api.route('/vehicules', methods=['POST'])
 def add_vehicule_route():
-   return add_vehicule()
+   return fonction.add_vehicule()
 
 @api.route('/devis/<int:vehicule_id>', methods=['POST'])
 def save_devis_route(vehicule_id):
     if not request.data:
         return jsonify({"error": "Aucune donnée PDF fournie"}), 400
-    return save_devis(vehicule_id, request.data)
+    return fonction.save_devis(vehicule_id, request.data)
 
 @api.route("/filter-vehicles", methods=["GET"])
 def filter_vehicles_func():
-    return filter_vehicles()
+    return fonction.filter_vehicles()
 
 @api.route('/update-etat-vehicule', methods=['PUT'])
 def update_etat_vehicule_route():
-    return update_etat_vehicule()
+    return fonction.update_etat_vehicule()
 
 @api.route('/get-achat-vehicule', methods=['GET'])
 def get_achat_vehicule_route():
-    return get_achat_vehicule()
+    return fonction.get_achat_vehicule()
 
 @api.route('/get-louer-vehicule', methods=['GET'])
 def get_louer_vehicule_route():
-    return get_louer_vehicule()
+    return fonction.get_louer_vehicule()
 
 @api.route('/vehicules/filter', methods=['POST'])
 def filter_vehicules_route():
-    return filter_vehicules()
+    return fonction.filter_vehicles()
 
 @api.route('/marques', methods=['GET'])
 def get_marques_route():
-    return get_marques()
+    return fonction.get_marques()
 
 @api.route('/modeles/<marque>', methods=['GET'])
 def get_modeles_route(marque):
-    return get_modeles(marque)
+    return fonction.get_modeles(marque)
 
 s3_client = boto3.client('s3')
 BUCKET_NAME = 'votre-bucket-s3'
