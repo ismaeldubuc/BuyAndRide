@@ -13,6 +13,10 @@ from database import get_db_connection
 
 load_dotenv()
 
+# Créer une instance de Flask et Bcrypt
+app = Flask(__name__)
+bcrypt = Bcrypt(app)
+
 def create_vehicle():
     data = request.json
     conn = get_db_connection()
@@ -206,34 +210,30 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 def profile():
-    logging.debug("Checking if user is authenticated")
-    if 'user_id' not in session:
-        logging.debug("No user_id in session")
-        return jsonify({"error": "Utilisateur non authentifié"}), 401
-
-    user_id = session['user_id']
-    conn = get_db_connection()
-    cursor = conn.cursor(cursor_factory=DictCursor)
-
     try:
-        logging.debug(f"Fetching user data for user_id: {user_id}")
+        if 'user_id' not in session:
+            return jsonify({"error": "Non authentifié"}), 401
+            
+        user_id = session['user_id']
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
         cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()
         
         if not user:
-            logging.debug("User not found in database")
             return jsonify({"error": "Utilisateur non trouvé"}), 404
-
-        logging.debug("User data retrieved successfully")
-        user_json = json.dumps(user, indent=4)
-        logging.debug("JSON data to be returned: " + user_json)
-        return jsonify(user)
+            
+        # Retourner les données dans le format attendu par le frontend
+        return jsonify([user['nom'], user['prenom'], user['email']]), 200
+        
     except Exception as e:
-        logging.error(f"Error retrieving user data: {str(e)}")
-        return jsonify({"error": "Erreur lors de la récupération des données : " + str(e)}), 500
+        return jsonify({"error": f"Erreur serveur: {str(e)}"}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
 
 def modif_profil():
     logging.debug("Checking if user is authenticated")
