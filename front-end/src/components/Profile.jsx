@@ -145,7 +145,7 @@ function Profile() {
     const fetchVehicules = async () => {
       
       try {
-        const response = await axios.get(`http://localhost:8000/vehicules`, {
+        const response = await axios.get(`${API_URL}/vehicules`, {
           withCredentials: true,
         });
         console.log("response:", response.data);

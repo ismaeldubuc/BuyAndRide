@@ -9,18 +9,13 @@ function Header() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("http://localhost:8000/check-login", {
-          method: "GET",
-          credentials: "include",
+        const response = await fetch(`${API_URL}/api/check-login`, {
+          credentials: 'include'
         });
-
         const data = await response.json();
-        setIsConnected(data.isAuthenticated);
+        setIsConnected(data.isLoggedIn);
       } catch (error) {
-        console.error(
-          "Erreur lors de la vérification de l'authentification",
-          error
-        );
+        console.error('Erreur lors de la vérification de l\'authentification', error);
       }
     };
 

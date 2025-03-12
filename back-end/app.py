@@ -31,25 +31,22 @@ jwt = JWTManager(app)
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
+# Routes API
 @api.route('/login', methods=['POST'])
 def login_route():
     return fonction.login()
 
-@api.route('/register', methods=['POST'])
-def register_route():
-    return fonction.register()
-
-@api.route('/logout', methods=['POST'])
-def logout_route():
-    return fonction.logout()
-
-@api.route('/modif_profil', methods=['POST'])
-def modif_profil_route():
-    return fonction.modif_profil()
-
 @api.route('/profile', methods=['GET'])
 def profile_route():
     return fonction.profile()
+
+@api.route('/vehicules', methods=['GET'])
+def get_vehicles_route():
+    return fonction.get_vehicle()
+
+@api.route('/vehicules/<int:id>', methods=['GET'])
+def get_vehicle_by_id_route(id):
+    return fonction.get_vehicle_by_id(id)
 
 # Configuration de la session
 if os.getenv('FLASK_ENV') == 'production':
@@ -125,9 +122,9 @@ def home():
 def login_route():
     return login()
 
-@app.route('/check-login', methods=['GET'])
+@api.route('/check-login', methods=['GET'])
 def check_login_route():
-    return check_login()
+    return fonction.check_login()
 
 @api.route('/register', methods=['POST'])
 def register_route():
@@ -142,8 +139,8 @@ def create_vehicle_func():
     return fonction.create_vehicle()
 
 @api.route('/vehicules', methods=['GET'])
-def list_vehicules_route():
-    return fonction.list_vehicules()
+def get_vehicules_route():
+    return fonction.get_vehicules()
 
 @api.route('/vehicules/<int:id>', methods=['GET'])
 def get_vehicule_route(id):
