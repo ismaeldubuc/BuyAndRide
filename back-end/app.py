@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, request, jsonify, send_from_directory, Blueprint
+from flask import Flask, request, jsonify, send_from_directory, Blueprint, session
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -15,7 +15,7 @@ from redis import Redis
 from flask_talisman import Talisman
 from logging.handlers import RotatingFileHandler
 from flask_compress import Compress
-from datetime import datetime
+from datetime import datetime, timedelta
 from database import get_db_connection
 
 # Set up logging
@@ -47,35 +47,53 @@ def logout_route():
 def modif_profil_route():
     return fonction.modif_profil()
 
+@api.route('/profile', methods=['GET'])
+def profile_route():
+    return fonction.profile()
+
+# Configuration de la session
+if os.getenv('FLASK_ENV') == 'production':
+    # Configuration Redis pour la production
+    app.config['SESSION_TYPE'] = 'redis'
+    app.config['SESSION_REDIS'] = Redis(
+        host=os.getenv('REDIS_HOST'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD')
+    )
+else:
+    # Configuration pour le développement local
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+
+Session(app)
+
+# Configuration CORS
 CORS(app, resources={r"/api/*": {
-    "origins": ["13.38.58.65"],
+    "origins": ["http://localhost:5173"],
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
     "supports_credentials": True,
     "expose_headers": ["Content-Type", "Authorization"],
-    "max_age": 600
+    "max_age": 600,
+    "allow_credentials": True
 }})
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_REDIS'] = Redis(
-    host=os.getenv('REDIS_HOST'),
-    port=int(os.getenv('REDIS_PORT', 6379)),
-    password=os.getenv('REDIS_PASSWORD')
-)
-Session(app)
-
-Talisman(app, 
-    content_security_policy={
-        'default-src': "'self'",
-        'img-src': ['*', 'data:', 'https:'],
-        'script-src': ["'self'", "'unsafe-inline'"],
-        'style-src': ["'self'", "'unsafe-inline'"]
-    }
-)
+# Désactivez Talisman en développement ou modifiez sa configuration
+if os.getenv('FLASK_ENV') != 'production':
+    app.config['TALISMAN_ENABLED'] = False
+else:
+    Talisman(app, 
+        content_security_policy={
+            'default-src': "'self'",
+            'img-src': ['*', 'data:', 'https:'],
+            'script-src': ["'self'", "'unsafe-inline'"],
+            'style-src': ["'self'", "'unsafe-inline'"]
+        }
+    )
 
 Compress(app)
 
