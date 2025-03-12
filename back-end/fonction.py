@@ -11,6 +11,7 @@ from flask_cors import CORS
 import time
 import json
 from database import get_db_connection
+import logging
 
 load_dotenv()
 
@@ -211,9 +212,12 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
     
 def check_login():
-    if 'user_id' in session:
-        return jsonify({"isAuthenticated": True, "user_id": session['user_id']}), 200
-    return jsonify({"isAuthenticated": False}), 401
+    try:
+        if 'user_id' in session:
+            return jsonify({"isLoggedIn": True}), 200
+        return jsonify({"isLoggedIn": False}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def profile():
     try:
@@ -276,9 +280,9 @@ def modif_profil():
 
                 cursor.execute("UPDATE users SET nom=%s, prenom=%s, email=%s WHERE id=%s",
                                (nom, prenom, email, user_id))
-                conn.commit()
-                logging.debug("Profile updated successfully")
-                return jsonify({"message": "Profil mis à jour avec succès"}), 200
+        conn.commit()
+        logging.debug("Profile updated successfully")
+        return jsonify({"message": "Profil mis à jour avec succès"}), 200
 
     except Exception as e:
         logging.error(f"Error processing request: {str(e)}")
@@ -538,3 +542,30 @@ def filter_vehicles():
     finally:
         cursor.close()
         conn.close()
+
+def get_vehicules():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute("SELECT * FROM vehicules")
+        vehicles = cursor.fetchall()
+        
+        vehicles_list = []
+        for vehicle in vehicles:
+            vehicle_dict = dict(vehicle)
+            for i in range(1, 6):
+                photo_key = f'photo{i}'
+                if vehicle_dict.get(photo_key):
+                    vehicle_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicle_dict[photo_key]))
+            vehicles_list.append(vehicle_dict)
+        
+        return jsonify(vehicles_list)
+    except Exception as e:
+        logging.error(f"Error in get_vehicules: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()

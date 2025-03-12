@@ -6,7 +6,6 @@ function Accueil() {
 
   return (
     <>
-      <Header />
       <main className="flex items-center justify-center min-h-screen  py-12 px-6">
         <div className="container mx-auto flex flex-col md:flex-row items-center gap-12">
           <div className="md:w-1/2 text-center md:text-left">

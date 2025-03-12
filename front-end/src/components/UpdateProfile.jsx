@@ -25,7 +25,7 @@ function UpdateProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("http://localhost:8000/profile", {
+        const response = await fetch(`${API_URL}/api/profile`, {
           method: "GET",
           credentials: "include",
           headers: {
