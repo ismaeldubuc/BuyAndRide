@@ -12,6 +12,7 @@ import Accueil from "./components/Accueil";
 import Acheter from "./components/Acheter";
 import VehicleDetails from "./components/VehicleDetails";
 import Louer from "./components/Louer";
+import UpdateProfile from "./components/UpdateProfile";
 
 export default function MesRoutes() {
   return (
@@ -20,7 +21,6 @@ export default function MesRoutes() {
         <Header />
         <main className="p-4">
           <Routes>
-              {/* <Route path="register" element={<Register />} /> */}
               <Route path="/" element={<Accueil/>} />
               <Route path="register-page" element={<Register />} />
               <Route path="login-page" element={<Login/>} />
@@ -32,6 +32,7 @@ export default function MesRoutes() {
               <Route path="annonce" element={<Annonce />} />  
               <Route path="acheter-page" element={<Acheter />} />
               <Route path="louer-page" element={<Louer />} />
+              <Route path="update-profile" element={<UpdateProfile />} />
               <Route path="*" element={<PageFound />} />
           </Routes>
         </main>
