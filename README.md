@@ -79,24 +79,6 @@ Nous avons tenté d'utiliser :
 - Stockage des images sur AWS S3(problème de configuration IAM).
 - Déploiement complet sur AWS.
 
-## Structure du projet
-\```
-M-Motors/
-├── back-end/
-│   ├── app.py # Point d'entrée de l'application Flask
-│   ├── fonction.py # Logique métier et routes
-│   ├── static/
-│   │   └── uploads/ # Stockage local des images
-│   └── requirements.txt
-└── front-end/
-    ├── src/
-    │   ├── components/ # Composants React
-    │   ├── assets/ # Images et ressources statiques
-    │   └── config.js # Configuration de l'API
-    ├── package.json
-    └── vite.config.js
-\```
-
 ## Configuration requise
 
 ### Backend (.env)
@@ -115,9 +97,3 @@ PG_PASSWORD=
 \```javascript
 export const API_URL = 'http://localhost:8000/api';
 \```
-
-## Contribution
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
-
-## Licence
-[MIT](LICENSE)
