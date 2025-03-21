@@ -19,7 +19,7 @@ export default function MesRoutes() {
     <BrowserRouter>
       <div>
         <Header />
-        <main className="p-4">
+        <main>
           <Routes>
               <Route path="/" element={<Accueil/>} />
               <Route path="register-page" element={<Register />} />
