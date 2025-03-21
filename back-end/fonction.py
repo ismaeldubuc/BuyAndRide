@@ -1,5 +1,5 @@
 import time
-from flask import Flask, request, jsonify, session , send_from_directory
+from flask import Flask, request, jsonify, session as flask_session, send_from_directory
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required,get_jwt_identity
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
@@ -12,7 +12,6 @@ import time
 import json
 from database import get_db_connection
 import logging
-import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
 
@@ -28,25 +27,12 @@ print("AWS Credentials:", {
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
-# Configuration S3 avec retry et timeout
-s3_config = Config(
-    region_name = 'eu-west-3',
-    retries = dict(
-        max_attempts = 3
-    )
-)
+# Définir le dossier d'upload
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
-# Configuration S3 avec session
-session = boto3.Session(
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_REGION', 'eu-west-3')
-)
-
-s3_client = session.client('s3', config=s3_config)
-BUCKET_NAME = 'groupe4mmotors'
-
-# Ajouter après les configurations initiales
+# Extensions autorisées
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 def allowed_file(filename):
@@ -241,8 +227,8 @@ def login():
         user = cursor.fetchone()
         
         if user and bcrypt.check_password_hash(user['mdp'], password):
-            session.clear()
-            session['user_id'] = user['id']
+            flask_session.clear()
+            flask_session['user_id'] = user['id']
             access_token = create_access_token(identity=user['id'])
             return jsonify({
                 "message": "Connexion réussie",
@@ -263,7 +249,7 @@ logging.basicConfig(level=logging.DEBUG)
     
 def check_login():
     try:
-        if 'user_id' in session:
+        if 'user_id' in flask_session:
             return jsonify({"isLoggedIn": True}), 200
         return jsonify({"isLoggedIn": False}), 200
     except Exception as e:
@@ -271,19 +257,18 @@ def check_login():
 
 def profile():
     try:
-        if 'user_id' not in session:
+        if 'user_id' not in flask_session:
             return jsonify({"error": "Utilisateur non connecté"}), 401
 
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
         
-        cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (session['user_id'],))
+        cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (flask_session['user_id'],))
         user = cursor.fetchone()
         
         if not user:
             return jsonify({"error": "Utilisateur non trouvé"}), 404
             
-        # Retourner les données dans le format attendu par le frontend
         return jsonify([user['nom'], user['prenom'], user['email']]), 200
 
     except Exception as e:
@@ -296,7 +281,7 @@ def profile():
 
 def modif_profil():
     try:
-        if 'user_id' not in session:
+        if 'user_id' not in flask_session:
             return jsonify({"error": "Utilisateur non connecté"}), 401
 
         data = request.get_json()
@@ -327,7 +312,7 @@ def modif_profil():
         if not update_fields:
             return jsonify({"error": "Aucune donnée à mettre à jour"}), 400
 
-        params.append(session['user_id'])
+        params.append(flask_session['user_id'])
         query = f"""
             UPDATE users 
             SET {', '.join(update_fields)}
@@ -349,16 +334,16 @@ def modif_profil():
             conn.close()
 
 def logout():
-    session.pop('user_id', None)
+    flask_session.pop('user_id', None)
     return jsonify({"message": "Déconnexion réussie"}), 200
 
 def list_vehicules():
-    if 'user_id' not in session:
+    if 'user_id' not in flask_session:
         return jsonify({"error": "Authentication required"}), 401
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
     try:
-        cursor.execute("SELECT * FROM vehicules WHERE user_id = %s", (session['user_id'],))
+        cursor.execute("SELECT * FROM vehicules WHERE user_id = %s", (flask_session['user_id'],))
         vehicules = cursor.fetchall()
         return jsonify(vehicules)
     finally:
@@ -367,7 +352,7 @@ def list_vehicules():
 
 def add_vehicule():
     try:
-        if 'user_id' not in session:
+        if 'user_id' not in flask_session:
             return jsonify({"error": "Utilisateur non connecté"}), 401
 
         data = request.get_json()
@@ -402,7 +387,7 @@ def add_vehicule():
             VALUES (%s, %s)
         """
         
-        cursor.execute(query_user_vehicule, (session['user_id'], vehicule_id))
+        cursor.execute(query_user_vehicule, (flask_session['user_id'], vehicule_id))
         conn.commit()
 
         return jsonify({
@@ -447,7 +432,7 @@ def save_file(file_key):
     return None
 
 def save_devis(vehicule_id, pdf_data):
-    if 'user_id' not in session:
+    if 'user_id' not in flask_session:
         return jsonify({"error": "Authentification requise"}), 401
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -455,12 +440,12 @@ def save_devis(vehicule_id, pdf_data):
         devis_path = os.path.join(app.config['UPLOAD_FOLDER'], 'devis')
         if not os.path.exists(devis_path):
             os.makedirs(devis_path)
-        filename = f"devis_{vehicule_id}_{session['user_id']}_{int(time.time())}.pdf"
+        filename = f"devis_{vehicule_id}_{flask_session['user_id']}_{int(time.time())}.pdf"
         file_path = os.path.join(devis_path, filename)
         with open(file_path, 'wb') as f:
             f.write(pdf_data)
         sql = "INSERT INTO devis_pdf (user_id, vehicule_id, pdf_path) VALUES (%s, %s, %s)"
-        cursor.execute(sql, (session['user_id'], vehicule_id, os.path.join('uploads/devis', filename)))
+        cursor.execute(sql, (flask_session['user_id'], vehicule_id, os.path.join('uploads/devis', filename)))
         conn.commit()
         return jsonify({"message": "Devis enregistré avec succès", "pdf_path": os.path.join('uploads/devis', filename)}), 201
     except Exception as e:
@@ -538,7 +523,7 @@ def filter_vehicles():
 def get_vehicules():
     try:
         # Vérifier si l'utilisateur est connecté
-        if 'user_id' not in session:
+        if 'user_id' not in flask_session:
             return jsonify({"error": "Utilisateur non connecté"}), 401
 
         conn = get_db_connection()
@@ -552,7 +537,7 @@ def get_vehicules():
             WHERE uv.id_user = %s
         """
         
-        cursor.execute(query, (session['user_id'],))
+        cursor.execute(query, (flask_session['user_id'],))
         vehicles = cursor.fetchall()
         
         vehicles_list = []
@@ -667,34 +652,6 @@ def get_achat_vehicule():
         if 'conn' in locals():
             conn.close()
 
-def upload_to_s3(file, filename):
-    try:
-        # Upload le fichier vers S3
-        s3_client.upload_fileobj(
-            file,
-            BUCKET_NAME,
-            f'vehicules/{filename}',
-            ExtraArgs={
-                'ACL': 'public-read',
-                'ContentType': file.content_type  # Ajout du type de contenu
-            }
-        )
-        
-        # Générer l'URL du fichier
-        url = f"https://{BUCKET_NAME}.s3.amazonaws.com/vehicules/{filename}"
-        print(f"Fichier uploadé avec succès: {url}")  # Log pour debug
-        return url
-    except ClientError as e:
-        print(f"Erreur S3: {str(e)}")
-        if 'NoSuchBucket' in str(e):
-            print(f"Le bucket {BUCKET_NAME} n'existe pas")
-        elif 'AccessDenied' in str(e):
-            print("Accès refusé - vérifiez vos credentials et permissions")
-        return None
-    except Exception as e:
-        print(f"Erreur inattendue: {str(e)}")
-        return None
-
 def upload_images():
     try:
         vehicule_id = request.form.get('vehicule_id')
@@ -710,18 +667,18 @@ def upload_images():
         for i in range(1, 6):
             if f'photo{i}' in request.files:
                 file = request.files[f'photo{i}']
-                if file and file.filename and allowed_file(file.filename):  # Vérification améliorée
+                if file and file.filename and allowed_file(file.filename):
                     # Générer un nom de fichier unique
                     filename = secure_filename(f"{vehicule_id}_{i}_{file.filename}")
+                    file_path = os.path.join(UPLOAD_FOLDER, filename)
                     
-                    # Upload vers S3 et récupérer l'URL
-                    s3_url = upload_to_s3(file, filename)
+                    # Sauvegarder le fichier localement
+                    file.save(file_path)
                     
-                    if s3_url:
-                        updates.append(f"photo{i} = %s")
-                        params.append(s3_url)
-                    else:
-                        return jsonify({"error": f"Erreur lors de l'upload de l'image {i}"}), 500
+                    # Stocker le chemin relatif dans la base de données
+                    db_path = os.path.join('uploads', filename)
+                    updates.append(f"photo{i} = %s")
+                    params.append(db_path)
                 else:
                     return jsonify({"error": f"Type de fichier non autorisé pour l'image {i}"}), 400
 
