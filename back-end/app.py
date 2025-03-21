@@ -235,23 +235,6 @@ def internal_error(error):
         "message": "Une erreur interne s'est produite"
     }), 500
 
-# Configuration S3
-s3_client = boto3.client('s3')
-BUCKET_NAME = 'votre-bucket-s3'
-
-def upload_file_to_s3(file, filename):
-    try:
-        s3_client.upload_fileobj(
-            file,
-            BUCKET_NAME,
-            filename,
-            ExtraArgs={'ACL': 'public-read'}
-        )
-        return f"https://{BUCKET_NAME}.s3.amazonaws.com/{filename}"
-    except ClientError as e:
-        print(e)
-        return None
-
 # Enregistrement du Blueprint
 app.register_blueprint(api)
 
