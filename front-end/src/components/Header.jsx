@@ -25,7 +25,7 @@ function Header() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8000/logout", {
+      const response = await fetch(`${API_URL}/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -34,9 +34,11 @@ function Header() {
         setIsConnected(false);
         setShowMenu(false);
         navigate("/login-page");
+      } else {
+        console.error("Erreur lors de la déconnexion");
       }
     } catch (error) {
-      console.error("Erreur lors de la déconnexion");
+      console.error("Erreur lors de la déconnexion:", error);
     }
   };
 
