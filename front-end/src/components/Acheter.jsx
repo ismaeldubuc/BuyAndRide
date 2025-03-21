@@ -12,7 +12,7 @@ const Acheter = () => {
         marque: "",
         modele: "",
         prix: "",
-        kilometrage: "",
+        km: "",
         energie: "",
         type: ""
     });
@@ -24,7 +24,7 @@ const Acheter = () => {
     useEffect(() => {
         const chargerVehicules = async () => {
             try {
-                const response = await fetch(`${API_URL}/get-vehicle`, {
+                const response = await fetch('http://localhost:8000/api/get-achat-vehicule', {
                     credentials: 'include'
                 });
                 if (response.ok) {
@@ -35,15 +35,15 @@ const Acheter = () => {
                         modele: vehicule.modele,
                         marque: vehicule.marque,
                         energie: vehicule.energie,
-                        kilometrage: vehicule.kilometrage,
-                        prix: parseFloat(vehicule.prix),
+                        km: vehicule.km || 0,
+                        prix: parseFloat(vehicule.prix || 0),
                         images: [
                             vehicule.photo1,
                             vehicule.photo2,
                             vehicule.photo3,
                             vehicule.photo4,
                             vehicule.photo5
-                        ].filter(photo => photo)
+                        ].filter(Boolean)
                     }));
                     setVehicules(vehiculesTransformes);
 
@@ -77,8 +77,13 @@ const Acheter = () => {
 
     const appliquerFiltres = async () => {
         const params = new URLSearchParams();
+        
+        // Ajouter type=true pour la page Acheter
+        params.append('type', 'true');
+        
+        // Ajouter les autres filtres
         Object.entries(filtres).forEach(([key, value]) => {
-            if (value) {
+            if (value && key !== 'type') {
                 params.append(key, value);
             }
         });
@@ -100,15 +105,15 @@ const Acheter = () => {
                 modele: vehicule.modele,
                 marque: vehicule.marque,
                 energie: vehicule.energie,
-                kilometrage: vehicule.kilometrage,
-                prix: parseFloat(vehicule.prix),
+                km: vehicule.km || 0,
+                prix: parseFloat(vehicule.prix || 0),
                 images: [
                     vehicule.photo1,
                     vehicule.photo2,
                     vehicule.photo3,
                     vehicule.photo4,
                     vehicule.photo5
-                ].filter(photo => photo)
+                ].filter(Boolean)
             }));
             setVehicules(vehiculesTransformes);
         } catch (error) {
@@ -177,9 +182,9 @@ const Acheter = () => {
 
                     <input
                         type="number"
-                        name="kilometrage"
+                        name="km"
                         placeholder="Kilométrage maximum"
-                        value={filtres.kilometrage}
+                        value={filtres.km}
                         onChange={handleFiltreChange}
                         className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300 w-48 flex-shrink-0"
                     />
@@ -205,7 +210,7 @@ const Acheter = () => {
                                         infiniteLoop={true}
                                         className="h-full"
                                     >
-                                        {vehicule.images.map((image, index) => (
+                                        {vehicule.images && vehicule.images.map((image, index) => (
                                             <div key={index} className="h-64">
                                                 <img
                                                     src={image}
@@ -230,11 +235,11 @@ const Acheter = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <span className="font-semibold w-16"><TbWheel className="text-xl" /></span>
-                                            <span>{vehicule.kilometrage.toLocaleString()} km</span>
+                                            <span>{vehicule.km ? vehicule.km.toLocaleString() : '0'} km</span>
                                         </div>
                                         <div className="flex items-center">
                                             <span className="font-semibold w-16"><BiEuro className="text-xl" /></span>
-                                            <span>{vehicule.prix.toLocaleString()} €</span>
+                                            <span>{vehicule.prix ? vehicule.prix.toLocaleString() : '0'} €</span>
                                         </div>
                                     </div>
                                     <button
@@ -269,7 +274,7 @@ const Acheter = () => {
                                     marque: "",
                                     modele: "",
                                     prix: "",
-                                    kilometrage: "",
+                                    km: "",
                                     energie: "",
                                     type: ""
                                 });

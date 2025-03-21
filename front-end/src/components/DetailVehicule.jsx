@@ -13,17 +13,30 @@ export default function DetailVehicule() {
   useEffect(() => {
     const fetchVehicule = async () => {
       try {
-        const response = await axios.get(
-          `${API_URL}/get-vehicle/${id}`,
-          { withCredentials: true }
-        );
-        console.log("Données reçues:", response.data);
-        setVehicule(response.data);
-        setErreur(null);
+        const response = await axios.get(`${API_URL}/get-vehicle/${id}`, {
+          withCredentials: true
+        });
+        
+        if (response.data.error) {
+          console.error('Erreur:', response.data.error);
+          setErreur(response.data.message || 'Erreur lors de la récupération du véhicule');
+          return;
+        }
+        
+        const vehicule = response.data;
+        setVehicule({
+          ...vehicule,
+          images: [
+            vehicule.photo1,
+            vehicule.photo2,
+            vehicule.photo3,
+            vehicule.photo4,
+            vehicule.photo5
+          ].filter(Boolean)
+        });
       } catch (error) {
-        console.error("Erreur:", error);
-        setErreur("Erreur lors du chargement du véhicule");
-        setVehicule(null);
+        console.error('Erreur:', error);
+        setErreur(error.response?.data?.message || 'Erreur lors de la récupération du véhicule');
       }
     };
     fetchVehicule();
@@ -44,7 +57,9 @@ export default function DetailVehicule() {
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(
-      `Vendeur: ${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}`,
+      `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
+        `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
+        'M-Motors'}`,
       15,
       45
     );
@@ -56,10 +71,10 @@ export default function DetailVehicule() {
       body: [
         ["Marque", vehicule.marque],
         ["Modèle", vehicule.modele],
-        ["Prix", `${vehicule.prix} €`],
-        ["Kilométrage", `${vehicule.kilometrage} km`],
+        ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
+        ["Kilométrage", `${vehicule.km} km`],
         ["Énergie", vehicule.energie],
-        ["Type", vehicule.type],
+        ["Type", vehicule.type ? 'À vendre' : 'À louer'],
       ],
       theme: "striped",
       headStyles: {
@@ -214,8 +229,14 @@ export default function DetailVehicule() {
             </div>
             <div className="space-y-4">
               <p className="text-lg">
+                <span className="font-bold">Vendeur: </span>
+                {vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
+                  `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
+                  'M-Motors'}
+              </p>
+              <p className="text-lg">
                 <span className="font-bold">Prix: </span>
-                {vehicule.prix} €
+                {vehicule.prix} {vehicule.type ? '€' : '€/mois'}
               </p>
               <p className="text-lg">
                 <span className="font-bold">Kilométrage: </span>
@@ -227,7 +248,7 @@ export default function DetailVehicule() {
               </p>
               <p className="text-lg">
                 <span className="font-bold">Type: </span>
-                {vehicule.type}
+                {vehicule.type ? 'À vendre' : 'À louer'}
               </p>
             </div>
             <div className="mt-6">

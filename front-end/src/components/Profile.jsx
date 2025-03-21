@@ -222,7 +222,7 @@ function Profile() {
                   {vehicule.marque} {vehicule.modele}
                 </h2>
                 <p className="text-gray-600">{vehicule.prix} €</p>
-                <p className="text-gray-500">{vehicule.kilometrage} km</p>
+                <p className="text-gray-500">{vehicule.km} km</p>
                 <div className="mt-4">
                   <Link
                     to={`/vehicules/${vehicule.id}`}
@@ -235,11 +235,11 @@ function Profile() {
             </div>
           ))}
           <div className="bg-gray-100 rounded-lg shadow-md overflow-hidden flex items-center justify-center">
-            <Link to="/login-page" className="p-8">
-              <div className="w-50 h-50 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
+            <Link to="/addVehicule" className="p-8">
+              <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-24 w-24 text-white"
+                  className="h-12 w-12 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
