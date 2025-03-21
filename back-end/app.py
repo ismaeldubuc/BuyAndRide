@@ -203,6 +203,10 @@ def upload_images_route():
             "message": "Erreur lors de l'upload des images"
         }), 500
 
+@api.route('/logout', methods=['POST'])
+def logout_route():
+    return fonction.logout()
+
 # Gestion des erreurs
 @api.errorhandler(Exception)
 def handle_error(error):

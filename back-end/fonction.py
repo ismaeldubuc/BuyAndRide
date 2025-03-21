@@ -250,9 +250,13 @@ logging.basicConfig(level=logging.DEBUG)
 def check_login():
     try:
         if 'user_id' in flask_session:
-            return jsonify({"isLoggedIn": True}), 200
+            return jsonify({
+                "isLoggedIn": True,
+                "user_id": flask_session['user_id']
+            }), 200
         return jsonify({"isLoggedIn": False}), 200
     except Exception as e:
+        print(f"Erreur dans check_login: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 def profile():
@@ -334,8 +338,13 @@ def modif_profil():
             conn.close()
 
 def logout():
-    flask_session.pop('user_id', None)
-    return jsonify({"message": "Déconnexion réussie"}), 200
+    try:
+        # Effacer la session
+        flask_session.clear()
+        return jsonify({"message": "Déconnexion réussie"}), 200
+    except Exception as e:
+        print(f"Erreur dans logout: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 def list_vehicules():
     if 'user_id' not in flask_session:
