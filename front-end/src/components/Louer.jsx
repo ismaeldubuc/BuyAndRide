@@ -12,47 +12,63 @@ const Louer = () => {
         marque: "",
         modele: "",
         prix: "",
-        kilometrage: "",
+        km: "",
         energie: "",
         type: ""
     });
     const [vehicules, setVehicules] = useState([]);
     const [marques, setMarques] = useState([]);
     const [modeles, setModeles] = useState([]);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const chargerVehicules = async () => {
             try {
-                const response = await fetch(`${API_URL}/get-vehicle`, {
+                const response = await fetch(`${API_URL}/get-louer-vehicule`, {
                     credentials: 'include'
                 });
-                if (response.ok) {
-                    const data = await response.json();
-                    const vehiculesTransformes = data.map(vehicule => ({
-                        id: vehicule.id,
-                        nom: `${vehicule.marque} ${vehicule.modele}`,
-                        modele: vehicule.modele,
-                        marque: vehicule.marque,
-                        energie: vehicule.energie,
-                        kilometrage: vehicule.kilometrage,
-                        prix: parseFloat(vehicule.prix),
-                        images: [
-                            vehicule.photo1,
-                            vehicule.photo2,
-                            vehicule.photo3,
-                            vehicule.photo4,
-                            vehicule.photo5
-                        ].filter(photo => photo)
-                    }));
-                    setVehicules(vehiculesTransformes);
-
-                    // Extraire les marques uniques
-                    const marquesUniques = [...new Set(data.map(v => v.marque))];
-                    setMarques(marquesUniques);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erreur lors de la récupération des véhicules');
                 }
+                
+                const data = await response.json();
+                console.log('Données reçues:', data); // Pour le débogage
+
+                if (!Array.isArray(data)) {
+                    console.error('Format de données invalide:', data);
+                    throw new Error('Format de données invalide');
+                }
+
+                const vehiculesTransformes = data.map(vehicule => ({
+                    id: vehicule.id,
+                    nom: `${vehicule.marque} ${vehicule.modele}`,
+                    modele: vehicule.modele,
+                    marque: vehicule.marque,
+                    energie: vehicule.energie,
+                    km: vehicule.km || 0,
+                    prix: parseFloat(vehicule.prix || 0),
+                    images: [
+                        vehicule.photo1,
+                        vehicule.photo2,
+                        vehicule.photo3,
+                        vehicule.photo4,
+                        vehicule.photo5
+                    ].filter(Boolean) // Filtrer les valeurs null/undefined
+                }));
+                
+                setVehicules(vehiculesTransformes);
+
+                const marquesUniques = [...new Set(data.map(v => v.marque))];
+                setMarques(marquesUniques);
+                setError(null);
             } catch (error) {
                 console.error('Erreur lors du chargement des véhicules:', error);
+                setVehicules([]);
+                setMarques([]);
+                setError(error.message);
             }
         };
 
@@ -78,8 +94,13 @@ const Louer = () => {
 
     const appliquerFiltres = async () => {
         const params = new URLSearchParams();
+        
+        // Ajouter type=false pour la page Louer
+        params.append('type', 'false');
+        
+        // Ajouter les autres filtres
         Object.entries(filtres).forEach(([key, value]) => {
-            if (value) {
+            if (value && key !== 'type') {  // Exclure le type car déjà ajouté
                 params.append(key, value);
             }
         });
@@ -101,7 +122,7 @@ const Louer = () => {
                 modele: vehicule.modele,
                 marque: vehicule.marque,
                 energie: vehicule.energie,
-                kilometrage: vehicule.kilometrage,
+                km: vehicule.km,
                 prix: parseFloat(vehicule.prix),
                 images: [
                     vehicule.photo1,
@@ -122,9 +143,13 @@ const Louer = () => {
         navigate(`/vehicules/${vehiculeId}`);
     };
 
+    if (error) {
+        return <div className="text-red-500 text-center p-4">{error}</div>;
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 text-center">Nos Véhicules à Vendre</h1>
+            <h1 className="text-3xl font-bold mb-8 text-center">Nos Véhicules à Louer</h1>
             
             <div className="mb-8 bg-white p-4 rounded-lg shadow-lg">
                 <h2 className="text-xl font-semibold mb-4">Filtres</h2>
@@ -178,9 +203,9 @@ const Louer = () => {
 
                     <input
                         type="number"
-                        name="kilometrage"
+                        name="km"
                         placeholder="Kilométrage maximum"
-                        value={filtres.kilometrage}
+                        value={filtres.km}
                         onChange={handleFiltreChange}
                         className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300 w-48 flex-shrink-0"
                     />
@@ -231,11 +256,11 @@ const Louer = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <span className="font-semibold w-16"><TbWheel className="text-xl" /></span>
-                                            <span>{vehicule.kilometrage.toLocaleString()} km</span>
+                                            <span>{vehicule.km.toLocaleString()} km</span>
                                         </div>
                                         <div className="flex items-center">
                                             <span className="font-semibold w-16"><BiEuro className="text-xl" /></span>
-                                            <span>{vehicule.prix.toLocaleString()} €</span>
+                                            <span>{vehicule.prix.toLocaleString()} €/mois</span>
                                         </div>
                                     </div>
                                     <button
@@ -270,7 +295,7 @@ const Louer = () => {
                                     marque: "",
                                     modele: "",
                                     prix: "",
-                                    kilometrage: "",
+                                    km: "",
                                     energie: "",
                                     type: ""
                                 });

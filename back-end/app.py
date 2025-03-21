@@ -31,22 +31,18 @@ jwt = JWTManager(app)
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
-# Routes API
-@api.route('/login', methods=['POST'])
-def login_route():
-    return fonction.login()
-
-@api.route('/profile', methods=['GET'])
-def profile_route():
-    return fonction.profile()
-
-@api.route('/vehicules', methods=['GET'])
-def get_vehicles_route():
-    return fonction.get_vehicle()
-
-@api.route('/vehicules/<int:id>', methods=['GET'])
-def get_vehicle_by_id_route(id):
-    return fonction.get_vehicle_by_id(id)
+# Configuration CORS plus détaillée
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+        "supports_credentials": True,
+        "expose_headers": ["Content-Type", "Authorization"],
+        "max_age": 600,
+        "vary_header": True
+    }
+})
 
 # Configuration de la session
 if os.getenv('FLASK_ENV') == 'production':
@@ -63,17 +59,6 @@ else:
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 Session(app)
-
-# Configuration CORS
-CORS(app, resources={r"/api/*": {
-    "origins": ["http://localhost:5173"],
-    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-    "supports_credentials": True,
-    "expose_headers": ["Content-Type", "Authorization"],
-    "max_age": 600,
-    "allow_credentials": True
-}})
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -94,41 +79,21 @@ else:
 
 Compress(app)
 
-# Enregistrement du Blueprint
-app.register_blueprint(api)
-
-# Configuration de la connexion à PostgreSQL
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv('PG_HOST', 'hetic.cd5ufp6fsve3.us-east-1.rds.amazonaws.com'),
-            port=os.getenv('PG_PORT', '5432'),
-            database=os.getenv('PG_DB', 'groupe4'),
-            user=os.getenv('PG_USER', 'postgres'),
-            password=os.getenv('PG_PASSWORD', 'LeContinent!')
-        )
-        logging.info("Database connection successful")
-        return conn
-    except Exception as e:
-        logging.error(f"Database connection failed: {str(e)}")
-        raise
-
-@app.route("/")
-def home():
-    return "Hello, World!"
-
-# Routes
+# Routes API
 @api.route('/login', methods=['POST'])
 def login_route():
-    return login()
+    return fonction.login()
 
 @api.route('/check-login', methods=['GET'])
 def check_login_route():
-    return fonction.check_login()
+    try:
+        return fonction.check_login()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @api.route('/register', methods=['POST'])
 def register_route():
-    return register()
+    return fonction.register()
 
 @api.route('/profile', methods=['GET'])
 def profile_route():
@@ -162,9 +127,15 @@ def delete_vehicle_func():
 def get_vehicle_func():
     return fonction.get_vehicle()
 
-@api.route("/get-vehicle/<int:id>", methods=["GET"])
-def get_vehicle_by_id_func(id):
-    return fonction.get_vehicle_by_id(id)
+@api.route('/get-vehicle/<int:id>', methods=['GET'])
+def get_vehicle_by_id_route(id):
+    try:
+        return fonction.get_vehicle_by_id(id)
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors de la récupération du véhicule"
+        }), 500
 
 @api.route('/vehicules', methods=['POST'])
 def add_vehicule_route():
@@ -176,9 +147,15 @@ def save_devis_route(vehicule_id):
         return jsonify({"error": "Aucune donnée PDF fournie"}), 400
     return fonction.save_devis(vehicule_id, request.data)
 
-@api.route("/filter-vehicles", methods=["GET"])
-def filter_vehicles_func():
-    return fonction.filter_vehicles()
+@api.route('/filter-vehicles', methods=['GET'])
+def filter_vehicles_route():
+    try:
+        return fonction.filter_vehicles()
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors du filtrage des véhicules"
+        }), 500
 
 @api.route('/update-etat-vehicule', methods=['PUT'])
 def update_etat_vehicule_route():
@@ -186,11 +163,23 @@ def update_etat_vehicule_route():
 
 @api.route('/get-achat-vehicule', methods=['GET'])
 def get_achat_vehicule_route():
-    return fonction.get_achat_vehicule()
+    try:
+        return fonction.get_achat_vehicule()
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors de la récupération des véhicules à vendre"
+        }), 500
 
 @api.route('/get-louer-vehicule', methods=['GET'])
 def get_louer_vehicule_route():
-    return fonction.get_louer_vehicule()
+    try:
+        return fonction.get_louer_vehicule()
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors de la récupération des véhicules à louer"
+        }), 500
 
 @api.route('/vehicules/filter', methods=['POST'])
 def filter_vehicules_route():
@@ -204,22 +193,17 @@ def get_marques_route():
 def get_modeles_route(marque):
     return fonction.get_modeles(marque)
 
-s3_client = boto3.client('s3')
-BUCKET_NAME = 'votre-bucket-s3'
-
-def upload_file_to_s3(file, filename):
+@api.route('/upload-images', methods=['POST'])
+def upload_images_route():
     try:
-        s3_client.upload_fileobj(
-            file,
-            BUCKET_NAME,
-            filename,
-            ExtraArgs={'ACL': 'public-read'}
-        )
-        return f"https://{BUCKET_NAME}.s3.amazonaws.com/{filename}"
-    except ClientError as e:
-        print(e)
-        return None
+        return fonction.upload_images()
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors de l'upload des images"
+        }), 500
 
+# Gestion des erreurs
 @api.errorhandler(Exception)
 def handle_error(error):
     response = {
@@ -251,6 +235,27 @@ def internal_error(error):
         "message": "Une erreur interne s'est produite"
     }), 500
 
+# Configuration S3
+s3_client = boto3.client('s3')
+BUCKET_NAME = 'votre-bucket-s3'
+
+def upload_file_to_s3(file, filename):
+    try:
+        s3_client.upload_fileobj(
+            file,
+            BUCKET_NAME,
+            filename,
+            ExtraArgs={'ACL': 'public-read'}
+        )
+        return f"https://{BUCKET_NAME}.s3.amazonaws.com/{filename}"
+    except ClientError as e:
+        print(e)
+        return None
+
+# Enregistrement du Blueprint
+app.register_blueprint(api)
+
+# Configuration du logging
 if not app.debug:
     file_handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
     file_handler.setFormatter(logging.Formatter(
@@ -260,6 +265,40 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
     app.logger.info('Application startup')
+
+@app.route('/api/get-louer-vehicule', methods=['GET'])
+def get_louer_vehicule():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+        
+        # Query to get vehicles available for rent
+        cur.execute("""
+            SELECT v.*, u.prenom as vendeur_prenom, u.nom as vendeur_nom 
+            FROM vehicules v 
+            JOIN users u ON v.user_id = u.id 
+            WHERE v.type_annonce = 'location'
+        """)
+        
+        vehicules = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return jsonify(vehicules)
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors de la récupération des véhicules à louer"
+        }), 500
+
+# Ajout d'un gestionnaire pour les requêtes OPTIONS
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 if __name__ == "__main__":
     logging.info("Starting Flask application...")
