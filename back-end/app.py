@@ -54,7 +54,7 @@ def login_route():
 def profile_route():
     return profile()
 
-@app.route('/api/modif_profil', methods=['POST'])  #Modification du profil
+@app.route('/api/modif_profil', methods=['PUT'])  #Modification du profil
 def modif_profil_route():
     return modif_profil()
 
