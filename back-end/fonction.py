@@ -120,16 +120,64 @@ def get_vehicle():
     finally:
         cursor.close()
         
+# def get_vehicle_by_id(id):
+#     try:
+#         conn = get_db_connection()
+#         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        
+#         # Requête pour obtenir un véhicule spécifique
+#         query = """
+#             SELECT * 
+#             FROM vehicules 
+#             WHERE id = %s
+#         """
+        
+#         cursor.execute(query, (id,))
+#         vehicule = cursor.fetchone()
+        
+#         if not vehicule:
+#             return jsonify({"error": "Véhicule non trouvé"}), 404
+            
+#         # Convertir en dictionnaire
+#         vehicule_dict = dict(vehicule)
+        
+#         # Convertir les valeurs Decimal en float pour la sérialisation JSON
+#         if 'prix' in vehicule_dict:
+#             vehicule_dict['prix'] = float(vehicule_dict['prix'])
+            
+#         # Transformer les chemins d'images
+#         for i in range(1, 6):
+#             photo_key = f'photo{i}'
+#             if vehicule_dict.get(photo_key):
+#                 vehicule_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicule_dict[photo_key]))
+
+#         return jsonify(vehicule_dict)
+
+#     except Exception as e:
+#         print(f"Erreur dans get_vehicle_by_id: {str(e)}")  # Pour le débogage
+#         return jsonify({
+#             "error": str(e),
+#             "message": "Erreur lors de la récupération du véhicule"
+#         }), 500
+#     finally:
+#         if 'cursor' in locals():
+#             cursor.close()
+#         if 'conn' in locals():
+#             conn.close()
+
+
 def get_vehicle_by_id(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Requête pour obtenir un véhicule spécifique
+        # Requête pour obtenir un véhicule spécifique avec les informations de l'utilisateur
         query = """
-            SELECT * 
-            FROM vehicules 
-            WHERE id = %s
+            SELECT v.*, u.prenom AS vendeur_prenom, u.nom AS vendeur_nom
+            FROM vehicules v
+            JOIN uservehicule uv ON v.id = uv.id_vehicule
+            JOIN users u ON u.id = uv.id_user
+            WHERE v.id = %s
         """
         
         cursor.execute(query, (id,))

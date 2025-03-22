@@ -99,6 +99,10 @@ def register_route():
 def profile_route():
     return fonction.profile()
 
+@api.route('/modif_profil', methods=['POST'])
+def modif_profil_route():
+    return fonction.modif_profil()
+
 @api.route("/create-vehicle", methods=["POST"])
 def create_vehicle_func():
     return fonction.create_vehicle()

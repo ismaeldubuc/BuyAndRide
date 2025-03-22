@@ -14,6 +14,9 @@ function Annonce() {
   });
 
   const [images, setImages] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("success"); // success ou error
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -69,7 +72,11 @@ function Annonce() {
             }
         }
 
-        alert("Véhicule ajouté avec succès !");
+        // Remplacer l'alert par le modal
+        setModalType("success");
+        setModalMessage("Véhicule ajouté avec succès !");
+        setShowModal(true);
+        
         // Réinitialiser le formulaire
         setFormData({
             marque: "",
@@ -84,16 +91,45 @@ function Annonce() {
 
     } catch (error) {
         console.error("Erreur lors de l'envoi des données :", error);
-        alert(error.message || "Une erreur est survenue !");
+        // Remplacer l'alert par le modal
+        setModalType("error");
+        setModalMessage(error.message || "Une erreur est survenue !");
+        setShowModal(true);
     }
+  };
+
+  // Composant Modal
+  const Modal = () => {
+    if (!showModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <div className={`text-xl font-bold mb-4 ${modalType === "success" ? "text-green-600" : "text-red-600"}`}>
+            {modalType === "success" ? "Succès" : "Erreur"}
+          </div>
+          <p className="mb-6">{modalMessage}</p>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowModal(false)}
+              className="bg-[#24507F] text-white px-4 py-2 rounded hover:opacity-80 transition"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <>
+      <Modal />
       <form
         onSubmit={handleSubmit}
         className="flex flex-col items-center justify-center w-full gap-5 p-5 mt-5"
       >
+        {/* Le reste du code du formulaire reste inchangé */}
         <label
           htmlFor="dropzone-file"
           className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"

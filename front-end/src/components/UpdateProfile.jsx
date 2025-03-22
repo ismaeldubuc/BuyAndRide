@@ -102,53 +102,19 @@ function UpdateProfile() {
 
         if (response.ok) {
             setMessage("Profil mis à jour avec succès !");
-            setUser(prev => ({
+            setTimeout(() => {
+                setMessage("");
+            }, 5000);            setUser(prev => ({
                 ...prev,
                 password: ''
             }));
+            setIsEditing(false);
         } else {
             setError(data.error || "Erreur lors de la mise à jour du profil");
         }
     } catch (error) {
         console.error("Erreur:", error);
         setError("Erreur de connexion au serveur");
-    }
-  };
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setError("");
-
-    if (passwords.new_password !== passwords.confirm_password) {
-      setError("Les mots de passe ne correspondent pas.");
-      return;
-    }
-
-    try {
-      const response = await fetch("http://localhost:8000/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          changer_mdp: "true",
-          new_password: passwords.new_password,
-          confirm_password: passwords.confirm_password,
-        }),
-        credentials: "include",
-      });
-
-      const data = await response.text();
-      if (response.ok) {
-        setMessage("Mot de passe mis à jour !");
-        setIsChangingPassword(false);
-        setPasswords({ new_password: "", confirm_password: "" });
-      } else {
-        setError(data || "Erreur lors de la mise à jour.");
-      }
-    } catch (error) {
-      setError("Erreur serveur.");
     }
   };
 
@@ -170,11 +136,19 @@ function UpdateProfile() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="flex items-center justify-center min-h-[70vh] bg-gray-50 dark:bg-gray-900 p-6">
       <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-3xl dark:bg-gray-800">
-        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-          Modifier mon profil
-        </h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Mon profil
+          </h1>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            {isEditing ? "Annuler" : "Modifier"}
+          </button>
+        </div>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -193,25 +167,37 @@ function UpdateProfile() {
               <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                 Nom
               </label>
-              <input
-                type="text"
-                name="nom"
-                value={user.nom}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="nom"
+                  value={user.nom}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              ) : (
+                <div className="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">
+                  {user.nom}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                 Prénom
               </label>
-              <input
-                type="text"
-                name="prenom"
-                value={user.prenom}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="prenom"
+                  value={user.prenom}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              ) : (
+                <div className="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">
+                  {user.prenom}
+                </div>
+              )}
             </div>
           </div>
 
@@ -219,49 +205,58 @@ function UpdateProfile() {
             <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
               Email
             </label>
-            <input
-              type="email"
-              name="email"
-              value={user.email}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
-              Nouveau mot de passe
-            </label>
-            <div className="relative">
+            {isEditing ? (
               <input
-                type={showNewPassword ? "text" : "password"}
-                name="password"
-                value={user.password || ''}
+                type="email"
+                name="email"
+                value={user.email}
                 onChange={handleChange}
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
-              >
-                {showNewPassword ? "Masquer" : "Afficher"}
-              </button>
-            </div>
+            ) : (
+              <div className="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white">
+                {user.email}
+              </div>
+            )}
           </div>
 
-          <div className="flex justify-between">
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Mettre à jour
-            </button>
-          </div>
+          {isEditing && (
+            <div>
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                Nouveau mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  name="password"
+                  value={user.password || ''}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                >
+                  {showNewPassword ? "Masquer" : "Afficher"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {isEditing && (
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+              >
+                Enregistrer
+              </button>
+            </div>
+          )}
         </form>
       </div>
-    </div>
-  );
+    </div>  );
 }
 
 export default UpdateProfile;

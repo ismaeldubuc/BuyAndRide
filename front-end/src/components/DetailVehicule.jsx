@@ -240,7 +240,7 @@ export default function DetailVehicule() {
               </p>
               <p className="text-lg">
                 <span className="font-bold">Kilométrage: </span>
-                {vehicule.kilometrage} km
+                {vehicule.km} km
               </p>
               <p className="text-lg">
                 <span className="font-bold">Énergie: </span>
