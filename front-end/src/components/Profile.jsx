@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { API_URL } from '../config';
+import { API_URL, STATIC_URL } from '../config';
 
 function Profile() {
   const [vehicules, setVehicules] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   const [user, setUser] = useState({
     nom: "",
@@ -59,7 +59,7 @@ function Profile() {
 
   
   const userId = localStorage.getItem("userId");
-  console.log("userId:", userId);
+  // console.log("userId:", userId);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -141,21 +141,38 @@ function Profile() {
       console.error("Erreur:", error);
     }
   };
+
   useEffect(() => {
     const fetchVehicules = async () => {
-      
       try {
         const response = await axios.get(`${API_URL}/vehicules`, {
           withCredentials: true,
         });
-        console.log("response:", response.data);
         setVehicules(response.data);
       } catch (error) {
         console.error("Error fetching vehicles:", error);
       }
     };
+
     fetchVehicules();
-  }, [userId]);
+  }, []);
+
+  const getImageUrl = (photoUrl) => {
+    if (!photoUrl) return null;
+    console.log("Traitement de l'URL:", photoUrl);
+    
+    // Si c'est une URL S3
+    if (photoUrl.includes('s3.amazonaws.com')) {
+      return photoUrl;
+    }
+    
+    // Si c'est un chemin local
+    return `${STATIC_URL}/${photoUrl}`;
+  };
+
+  if (error) {
+    return <div>Erreur: {error}</div>;
+  }
 
   return (
     <>
@@ -205,55 +222,48 @@ function Profile() {
       </div>
 
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">Mes véhicules</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Mes Véhicules</h1>
+          <Link
+            to="/addVehicule"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            + Ajouter un véhicule
+          </Link>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicules.map((vehicule) => (
-            <div
-              key={vehicule.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
-            >
-              <img
-                src={`http://localhost:8000/static/${vehicule.photo1}`}
-                alt={`${vehicule.marque} ${vehicule.modele}`}
-                className="w-full h-48 object-cover"
-              />
+            <div key={vehicule.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="image-container">
+                {vehicule.photo1 && (
+                  <img
+                    src={vehicule.photo1}
+                    alt={`${vehicule.marque} ${vehicule.modele}`}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      console.error(`Erreur de chargement de l'image:`, vehicule.photo1);
+                      e.target.src = '/src/assets/placeholder.png';
+                    }}
+                  />
+                )}
+              </div>
               <div className="p-4">
                 <h2 className="text-xl font-semibold">
                   {vehicule.marque} {vehicule.modele}
                 </h2>
                 <p className="text-gray-600">{vehicule.prix} €</p>
                 <p className="text-gray-500">{vehicule.km} km</p>
-                <div className="mt-4">
-                  <Link
-                    to={`/vehicules/${vehicule.id}`}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Voir détails
-                  </Link>
-                </div>
+                <p className="text-gray-500">{vehicule.energie}</p>
+                <Link
+                  to={`/vehicules/${vehicule.id}`}
+                  className="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded"
+                >
+                  Voir détails
+                </Link>
               </div>
             </div>
           ))}
-          <div className="bg-gray-100 rounded-lg shadow-md overflow-hidden flex items-center justify-center">
-            <Link to="/addVehicule" className="p-8">
-              <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </div>
-            </Link>
-          </div>
         </div>
       </div>
     </>

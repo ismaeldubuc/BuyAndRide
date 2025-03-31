@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { API_URL, STATIC_URL } from '../config';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { API_URL, STATIC_URL } from '../config';
 
-export default function DetailVehicule() {
+function DetailVehicule() {
   const { id } = useParams();
   const [vehicule, setVehicule] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -13,177 +12,111 @@ export default function DetailVehicule() {
   useEffect(() => {
     const fetchVehicule = async () => {
       try {
-        const response = await axios.get(`${API_URL}/get-vehicle/${id}`, {
-          withCredentials: true
+        const response = await fetch(`${API_URL}/vehicules/${id}`, {
+          credentials: 'include'
         });
-        
-        if (response.data.error) {
-          console.error('Erreur:', response.data.error);
-          setErreur(response.data.message || 'Erreur lors de la récupération du véhicule');
-          return;
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération du véhicule');
         }
-        
-        const vehicule = response.data;
-        setVehicule({
-          ...vehicule,
-          images: [
-            vehicule.photo1,
-            vehicule.photo2,
-            vehicule.photo3,
-            vehicule.photo4,
-            vehicule.photo5
-          ].filter(Boolean)
-        });
+
+        const data = await response.json();
+        setVehicule(data);
       } catch (error) {
         console.error('Erreur:', error);
-        setErreur(error.response?.data?.message || 'Erreur lors de la récupération du véhicule');
+        setErreur(error.message);
       }
     };
+
     fetchVehicule();
   }, [id]);
 
   const generatePDF = () => {
     const doc = new jsPDF();
-
+    
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(24);
+    doc.setFontSize(20);
     doc.setTextColor(41, 128, 185);
     doc.text("BUY AND RIDE", 105, 15, { align: "center" });
 
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
-    doc.text("Devis Véhicule", 105, 30, { align: "center" });
-
-    doc.setFontSize(12);
+    doc.text("Devis Véhicule", 105, 25, { align: "center" });
+    
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(
-      `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
-        `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
-        'M-Motors'}`,
-      15,
-      45
+        `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
+            `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
+            'M-Motors'}`,
+        15,
+        35
     );
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 52);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 42);
 
     autoTable(doc, {
-      startY: 60,
-      head: [["Caractéristiques", "Détails"]],
-      body: [
-        ["Marque", vehicule.marque],
-        ["Modèle", vehicule.modele],
-        ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
-        ["Kilométrage", `${vehicule.km} km`],
-        ["Énergie", vehicule.energie],
-        ["Type", vehicule.type ? 'À vendre' : 'À louer'],
-      ],
-      theme: "striped",
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: [255, 255, 255],
-        fontSize: 12,
-        fontStyle: "bold",
-      },
-      bodyStyles: {
-        fontSize: 11,
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240],
-      },
+        startY: 45,
+        head: [["Caractéristiques", "Détails"]],
+        body: [
+            ["Marque", vehicule.marque],
+            ["Modèle", vehicule.modele],
+            ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
+            ["Kilométrage", `${vehicule.km} km`],
+            ["Énergie", vehicule.energie],
+            ["Type", vehicule.type ? 'À vendre' : 'À louer'],
+        ],
+        theme: "striped",
+        headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: [255, 255, 255],
+            fontSize: 10,
+            fontStyle: "bold",
+        },
+        bodyStyles: {
+            fontSize: 10,
+        },
+        alternateRowStyles: {
+            fillColor: [240, 240, 240],
+        },
+        margin: { left: 15, right: 15 },
     });
 
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 20);
-    doc.setFontSize(11);
+    doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 10);
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 30, {
-      maxWidth: 180,
+    doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
+        maxWidth: 180,
     });
 
-    let yPosition = doc.lastAutoTable.finalY + 60;
-    const promises = [];
-    const images = [
-      vehicule.photo1,
-      vehicule.photo2,
-      vehicule.photo3,
-      vehicule.photo4,
-      vehicule.photo5,
-    ].filter(Boolean);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Conditions du devis", 15, doc.lastAutoTable.finalY + 50);
 
-    images.forEach((photo, index) => {
-        if (photo) {
-            promises.push(
-                new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = "Anonymous";
-                    img.onload = () => {
-                        if (yPosition > 250) {
-                            doc.addPage();
-                            yPosition = 20;
-                        }
-                        doc.addImage(
-                            img, 
-                            "JPEG", 
-                            15, 
-                            yPosition, 
-                            80, 
-                            60
-                        );
-                        yPosition += 70;
-                        resolve();
-                    };
-                    img.src = `${STATIC_URL}/${photo}`;
-                })
-            );
-        }
-    });
-
-    Promise.all(promises).then(() => {
-      doc.addPage();
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("Conditions du devis", 105, 20, { align: "center" });
-
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      const conditions = [
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const conditions = [
         "• Ce devis est valable 30 jours à compter de sa date d'émission",
         "• Prix indiqué hors frais d'immatriculation et de mise en route",
         "• Garantie selon conditions en vigueur",
         "• Photos non contractuelles",
-      ];
+    ];
 
-      conditions.forEach((condition, index) => {
-        doc.text(condition, 15, 40 + index * 10);
-      });
-
-      doc.text("Signature du vendeur:", 15, 230);
-      doc.text("Signature de l'acheteur:", 120, 230);
-
-      doc.setFontSize(8);
-      doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
-        align: "center",
-      });
-
-      const pdfOutput = doc.output("arraybuffer");
-
-      fetch(`http://localhost:8000/api/devis/${vehicule.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/pdf",
-        },
-        body: pdfOutput,
-        credentials: "include",
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("PDF sauvegardé:", data);
-          doc.save(`devis_${vehicule.marque}_${vehicule.modele}.pdf`);
-        })
-        .catch((error) => {
-          console.error("Erreur:", error);
-        });
+    conditions.forEach((condition, index) => {
+        doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + (index * 7));
     });
+
+    doc.text("Signature du vendeur:", 15, 250);
+    doc.text("Signature de l'acheteur:", 120, 250);
+
+    doc.setFontSize(8);
+    doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
+        align: "center",
+    });
+
+    // Sauvegarder le PDF
+    doc.save(`devis_${vehicule.marque}_${vehicule.modele}.pdf`);
   };
 
   if (erreur) return <div className="text-red-500">{erreur}</div>;
@@ -196,25 +129,33 @@ export default function DetailVehicule() {
         {/* Galerie d'images */}
         <div className="col-8">
           <div className="carousel">
-            <img 
-              src={`${STATIC_URL}/${vehicule.photo1}`}
-              className="d-block w-100" 
-              alt={`${vehicule.marque} ${vehicule.modele}`}
-              style={{ height: '600px', objectFit: 'cover' }}
-            />
+            {vehicule.photo1 && (
+              <img 
+                src={vehicule.photo1}
+                alt={`${vehicule.marque} ${vehicule.modele}`}
+                style={{ height: '600px', objectFit: 'cover' }}
+                onError={(e) => {
+                  console.error(`Erreur de chargement de l'image:`, vehicule.photo1);
+                  e.target.src = '/src/assets/placeholder.png';
+                }}
+              />
+            )}
             <div className="mt-2 d-flex gap-2">
               {[vehicule.photo2, vehicule.photo3, vehicule.photo4, vehicule.photo5]
                 .filter(photo => photo)
                 .map((photo, index) => (
                   <img
                     key={index}
-                    src={`${STATIC_URL}/${photo}`}
+                    src={photo}
                     alt={`Vue ${index + 2}`}
                     className="img-thumbnail"
                     style={{ width: '150px', height: '100px', objectFit: 'cover' }}
+                    onError={(e) => {
+                      console.error(`Erreur de chargement de l'image:`, photo);
+                      e.target.src = '/src/assets/placeholder.png';
+                    }}
                   />
-                ))
-              }
+                ))}
             </div>
           </div>
         </div>
@@ -277,3 +218,5 @@ export default function DetailVehicule() {
     </div>
   );
 }
+
+export default DetailVehicule;

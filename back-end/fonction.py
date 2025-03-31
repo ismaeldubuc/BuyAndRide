@@ -14,6 +14,7 @@ from database import get_db_connection
 import logging
 from botocore.exceptions import ClientError
 from botocore.config import Config
+import boto3
 
 load_dotenv()
 
@@ -34,6 +35,13 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # Extensions autorisées
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+# Configuration S3
+s3_client = boto3.client('s3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_REGION')
+)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -548,21 +556,18 @@ def get_vehicules():
         
         cursor.execute(query, (flask_session['user_id'],))
         vehicles = cursor.fetchall()
-        
+
         vehicles_list = []
         for vehicle in vehicles:
             vehicle_dict = dict(vehicle)
             # Convertir les valeurs Decimal en float pour la sérialisation JSON
             if 'prix' in vehicle_dict:
                 vehicle_dict['prix'] = float(vehicle_dict['prix'])
-            # Transformer les chemins d'images
-            for i in range(1, 6):
-                photo_key = f'photo{i}'
-                if vehicle_dict.get(photo_key):
-                    vehicle_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicle_dict[photo_key]))
+            # Ne pas modifier les URLs des images
             vehicles_list.append(vehicle_dict)
-        
+
         return jsonify(vehicles_list)
+
     except Exception as e:
         logging.error(f"Error in get_vehicules: {str(e)}")
         return jsonify({
@@ -580,7 +585,6 @@ def get_louer_vehicule():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Requête pour obtenir les véhicules à louer
         query = """
             SELECT * 
             FROM vehicules 
@@ -590,24 +594,18 @@ def get_louer_vehicule():
         cursor.execute(query)
         vehicules = cursor.fetchall()
 
-        # Convertir les résultats en liste de dictionnaires
         vehicules_list = []
         for vehicule in vehicules:
             vehicule_dict = dict(vehicule)
-            # Convertir les valeurs Decimal en float pour la sérialisation JSON
             if 'prix' in vehicule_dict:
                 vehicule_dict['prix'] = float(vehicule_dict['prix'])
-            # Transformer les chemins d'images
-            for i in range(1, 6):
-                photo_key = f'photo{i}'
-                if vehicule_dict.get(photo_key):
-                    vehicule_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicule_dict[photo_key]))
+            # Ne pas modifier les URLs S3
             vehicules_list.append(vehicule_dict)
 
         return jsonify(vehicules_list)
 
     except Exception as e:
-        print(f"Erreur dans get_louer_vehicule: {str(e)}")  # Pour le débogage
+        print(f"Erreur dans get_louer_vehicule: {str(e)}")
         return jsonify({
             "error": str(e),
             "message": "Erreur lors de la récupération des véhicules à louer"
@@ -623,7 +621,6 @@ def get_achat_vehicule():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
-        # Requête pour obtenir les véhicules à vendre
         query = """
             SELECT * 
             FROM vehicules 
@@ -633,24 +630,18 @@ def get_achat_vehicule():
         cursor.execute(query)
         vehicules = cursor.fetchall()
 
-        # Convertir les résultats en liste de dictionnaires
         vehicules_list = []
         for vehicule in vehicules:
             vehicule_dict = dict(vehicule)
-            # Convertir les valeurs Decimal en float pour la sérialisation JSON
             if 'prix' in vehicule_dict:
                 vehicule_dict['prix'] = float(vehicule_dict['prix'])
-            # Transformer les chemins d'images
-            for i in range(1, 6):
-                photo_key = f'photo{i}'
-                if vehicule_dict.get(photo_key):
-                    vehicule_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicule_dict[photo_key]))
+            # Ne pas modifier les URLs S3
             vehicules_list.append(vehicule_dict)
 
         return jsonify(vehicules_list)
 
     except Exception as e:
-        print(f"Erreur dans get_achat_vehicule: {str(e)}")  # Pour le débogage
+        print(f"Erreur dans get_achat_vehicule: {str(e)}")
         return jsonify({
             "error": str(e),
             "message": "Erreur lors de la récupération des véhicules à vendre"
@@ -660,6 +651,23 @@ def get_achat_vehicule():
             cursor.close()
         if 'conn' in locals():
             conn.close()
+
+def upload_to_s3(file, filename):
+    """Upload un fichier vers S3 et retourne son URL"""
+    try:
+        bucket_name = os.getenv('S3_BUCKET')
+        s3_client.upload_fileobj(
+            file,
+            bucket_name,
+            f'vehicules/{filename}',
+            ExtraArgs={
+                'ContentType': file.content_type
+            }
+        )
+        return f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/vehicules/{filename}"
+    except ClientError as e:
+        print(f"Erreur S3: {str(e)}")
+        return None
 
 def upload_images():
     try:
@@ -679,17 +687,14 @@ def upload_images():
                 if file and file.filename and allowed_file(file.filename):
                     # Générer un nom de fichier unique
                     filename = secure_filename(f"{vehicule_id}_{i}_{file.filename}")
-                    file_path = os.path.join(UPLOAD_FOLDER, filename)
                     
-                    # Sauvegarder le fichier localement
-                    file.save(file_path)
-                    
-                    # Stocker le chemin relatif dans la base de données
-                    db_path = os.path.join('uploads', filename)
-                    updates.append(f"photo{i} = %s")
-                    params.append(db_path)
-                else:
-                    return jsonify({"error": f"Type de fichier non autorisé pour l'image {i}"}), 400
+                    # Upload vers S3
+                    s3_url = upload_to_s3(file, filename)
+                    if s3_url:
+                        updates.append(f"photo{i} = %s")
+                        params.append(s3_url)
+                    else:
+                        return jsonify({"error": f"Erreur lors de l'upload de l'image {i} vers S3"}), 500
 
         if updates:
             query = f"""

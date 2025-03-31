@@ -121,9 +121,13 @@ function Annonce() {
             {images.map((image, index) => (
               <div key={index} className="relative">
                 <img
-                  src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+                  src={image instanceof File ? URL.createObjectURL(image) : image}
                   alt={`Preview ${index + 1}`}
                   className="h-24 w-24 object-cover rounded-lg"
+                  onError={(e) => {
+                    console.error("Erreur de chargement de l'image:", image);
+                    e.target.src = '/src/assets/placeholder.png';
+                  }}
                 />
                 <button
                   type="button"

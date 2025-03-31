@@ -11,3 +11,5 @@ const configs = {
 
 const environment = import.meta.env.MODE === 'production' ? 'production' : 'development';
 export const { API_URL, STATIC_URL } = configs[environment];
+
+console.log("Configuration chargée:", { API_URL, STATIC_URL }); // Debug

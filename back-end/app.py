@@ -1,6 +1,6 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, request, jsonify, send_from_directory, Blueprint, session
+from flask import Flask, request, jsonify, send_from_directory, Blueprint, session as flask_session
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -17,6 +17,7 @@ from logging.handlers import RotatingFileHandler
 from flask_compress import Compress
 from datetime import datetime, timedelta
 from database import get_db_connection
+from psycopg2.extras import DictCursor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -31,16 +32,12 @@ jwt = JWTManager(app)
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
-# Configuration CORS plus détaillée
-CORS(app, resources={
+# Configuration CORS correcte
+CORS(app, supports_credentials=True, resources={
     r"/api/*": {
         "origins": ["http://localhost:5173"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-        "supports_credentials": True,
-        "expose_headers": ["Content-Type", "Authorization"],
-        "max_age": 600,
-        "vary_header": True
+        "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
@@ -108,8 +105,40 @@ def get_vehicules_route():
     return fonction.get_vehicules()
 
 @api.route('/vehicules/<int:id>', methods=['GET'])
-def get_vehicule_route(id):
-    return fonction.get_vehicule(id)
+def get_vehicle(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        query = """
+            SELECT * 
+            FROM vehicules 
+            WHERE id = %s
+        """
+        
+        cursor.execute(query, (id,))
+        vehicule = cursor.fetchone()
+
+        if not vehicule:
+            return jsonify({"error": "Véhicule non trouvé"}), 404
+
+        vehicule_dict = dict(vehicule)
+        if 'prix' in vehicule_dict:
+            vehicule_dict['prix'] = float(vehicule_dict['prix'])
+
+        return jsonify(vehicule_dict)
+
+    except Exception as e:
+        print(f"Erreur dans get_vehicle: {str(e)}")
+        return jsonify({
+            "error": str(e),
+            "message": "Erreur lors de la récupération du véhicule"
+        }), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
 
 @api.route('/static/uploads/<path:filename>')
 def serve_image(filename):
@@ -254,29 +283,8 @@ if not app.debug:
     app.logger.info('Application startup')
 
 @app.route('/api/get-louer-vehicule', methods=['GET'])
-def get_louer_vehicule():
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor(dictionary=True)
-        
-        # Query to get vehicles available for rent
-        cur.execute("""
-            SELECT v.*, u.prenom as vendeur_prenom, u.nom as vendeur_nom 
-            FROM vehicules v 
-            JOIN users u ON v.user_id = u.id 
-            WHERE v.type_annonce = 'location'
-        """)
-        
-        vehicules = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return jsonify(vehicules)
-    except Exception as e:
-        return jsonify({
-            "error": str(e),
-            "message": "Erreur lors de la récupération des véhicules à louer"
-        }), 500
+def louer_vehicule():
+    return get_louer_vehicule()
 
 # Ajout d'un gestionnaire pour les requêtes OPTIONS
 @app.after_request

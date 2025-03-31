@@ -6,6 +6,8 @@ import { TbWheel } from "react-icons/tb";
 import { BiEuro } from "react-icons/bi";
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const Louer = () => {
     const [filtres, setFiltres] = useState({
