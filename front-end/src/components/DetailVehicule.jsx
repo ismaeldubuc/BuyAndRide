@@ -31,92 +31,131 @@ function DetailVehicule() {
     fetchVehicule();
   }, [id]);
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(41, 128, 185);
-    doc.text("BUY AND RIDE", 105, 15, { align: "center" });
+  const generatePDF = async () => {
+    try {
+        const doc = new jsPDF();
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(41, 128, 185);
+        doc.text("BUY AND RIDE", 105, 15, { align: "center" });
 
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0);
-    doc.text("Devis Véhicule", 105, 25, { align: "center" });
-    
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-        `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
-            `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
-            'M-Motors'}`,
-        15,
-        35
-    );
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 42);
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Devis Véhicule", 105, 25, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+            `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
+                `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
+                'M-Motors'}`,
+            15,
+            35
+        );
+        doc.text(
+            `Acheteur: ${sessionStorage.getItem('userPrenom')} ${sessionStorage.getItem('userNom')}`,
+            15,
+            42
+        );
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 49);
 
-    autoTable(doc, {
-        startY: 45,
-        head: [["Caractéristiques", "Détails"]],
-        body: [
-            ["Marque", vehicule.marque],
-            ["Modèle", vehicule.modele],
-            ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
-            ["Kilométrage", `${vehicule.km} km`],
-            ["Énergie", vehicule.energie],
-            ["Type", vehicule.type ? 'À vendre' : 'À louer'],
-        ],
-        theme: "striped",
-        headStyles: {
-            fillColor: [41, 128, 185],
-            textColor: [255, 255, 255],
-            fontSize: 10,
-            fontStyle: "bold",
-        },
-        bodyStyles: {
-            fontSize: 10,
-        },
-        alternateRowStyles: {
-            fillColor: [240, 240, 240],
-        },
-        margin: { left: 15, right: 15 },
-    });
+        autoTable(doc, {
+            startY: 45,
+            head: [["Caractéristiques", "Détails"]],
+            body: [
+                ["Marque", vehicule.marque],
+                ["Modèle", vehicule.modele],
+                ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
+                ["Kilométrage", `${vehicule.km} km`],
+                ["Énergie", vehicule.energie],
+                ["Type", vehicule.type ? 'À vendre' : 'À louer'],
+            ],
+            theme: "striped",
+            headStyles: {
+                fillColor: [41, 128, 185],
+                textColor: [255, 255, 255],
+                fontSize: 10,
+                fontStyle: "bold",
+            },
+            bodyStyles: {
+                fontSize: 10,
+            },
+            alternateRowStyles: {
+                fillColor: [240, 240, 240],
+            },
+            margin: { left: 15, right: 15 },
+        });
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 10);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
-        maxWidth: 180,
-    });
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 10);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
+            maxWidth: 180,
+        });
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Conditions du devis", 15, doc.lastAutoTable.finalY + 50);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Conditions du devis", 15, doc.lastAutoTable.finalY + 50);
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    const conditions = [
-        "• Ce devis est valable 30 jours à compter de sa date d'émission",
-        "• Prix indiqué hors frais d'immatriculation et de mise en route",
-        "• Garantie selon conditions en vigueur",
-        "• Photos non contractuelles",
-    ];
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const conditions = [
+            "• Ce devis est valable 30 jours à compter de sa date d'émission",
+            "• Prix indiqué hors frais d'immatriculation et de mise en route",
+            "• Garantie selon conditions en vigueur",
+            "• Photos non contractuelles",
+        ];
 
-    conditions.forEach((condition, index) => {
-        doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + (index * 7));
-    });
+        conditions.forEach((condition, index) => {
+            doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + (index * 7));
+        });
 
-    doc.text("Signature du vendeur:", 15, 250);
-    doc.text("Signature de l'acheteur:", 120, 250);
+        doc.text("Signature du vendeur:", 15, 250);
+        doc.text("Signature de l'acheteur:", 120, 250);
 
-    doc.setFontSize(8);
-    doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
-        align: "center",
-    });
+        doc.setFontSize(8);
+        doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
+            align: "center",
+        });
 
-    // Sauvegarder le PDF
-    doc.save(`devis_${vehicule.marque}_${vehicule.modele}.pdf`);
+        const pdfBlob = doc.output('blob');
+        
+        const formData = new FormData();
+        const fileName = `${sessionStorage.getItem('userNom')}_${vehicule.modele}.pdf`;
+        formData.append('pdf', new Blob([pdfBlob], { type: 'application/pdf' }), fileName);
+        formData.append('vehicule_id', vehicule.id);
+
+        console.log('Tentative d\'envoi du devis...');
+
+        const response = await fetch(`${API_URL}/api/upload-devis`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+
+        console.log('Réponse reçue:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erreur lors de l\'upload du devis');
+        }
+
+        const data = await response.json();
+        console.log('Devis uploadé avec succès:', data.url);
+        
+        doc.save(fileName);
+        
+        alert('Le devis a été généré et sauvegardé avec succès !');
+    } catch (error) {
+        console.error('Erreur détaillée:', error);
+        alert(`Erreur lors de la génération du devis: ${error.message}`);
+    }
   };
 
   if (erreur) return <div className="text-red-500">{erreur}</div>;

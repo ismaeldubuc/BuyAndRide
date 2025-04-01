@@ -719,3 +719,17 @@ def upload_images():
             cursor.close()
         if 'conn' in locals():
             conn.close()
+
+def upload_pdf_to_s3(pdf_data, filename):
+    try:
+        bucket_name = os.getenv('S3_BUCKET')
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=f'devis/{filename}',
+            Body=pdf_data,
+            ContentType='application/pdf'
+        )
+        return f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/devis/{filename}"
+    except Exception as e:
+        print(f"Erreur lors de l'upload du PDF vers S3: {str(e)}")
+        return None

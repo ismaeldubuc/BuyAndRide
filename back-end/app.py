@@ -18,6 +18,7 @@ from flask_compress import Compress
 from datetime import datetime, timedelta
 from database import get_db_connection
 from psycopg2.extras import DictCursor
+from fonction import upload_pdf_to_s3  # Ajoutez cet import
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -33,13 +34,16 @@ jwt = JWTManager(app)
 api = Blueprint('api', __name__, url_prefix='/api')
 
 # Configuration CORS correcte
-CORS(app, supports_credentials=True, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:5173"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+CORS(app, 
+    resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5173"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
     }
-})
+)
 
 # Configuration de la session
 if os.getenv('FLASK_ENV') == 'production':
@@ -235,6 +239,52 @@ def upload_images_route():
 @api.route('/logout', methods=['POST'])
 def logout_route():
     return fonction.logout()
+
+@api.route('/api/upload-devis', methods=['POST', 'OPTIONS'])
+def upload_devis():
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    try:
+        if 'user_id' not in flask_session:
+            return jsonify({"error": "Utilisateur non connecté"}), 401
+
+        if 'pdf' not in request.files:
+            return jsonify({"error": "Pas de fichier PDF"}), 400
+            
+        pdf_file = request.files['pdf']
+        vehicule_id = request.form.get('vehicule_id')
+        
+        if not pdf_file or not vehicule_id:
+            return jsonify({"error": "Données manquantes"}), 400
+
+        # Récupérer les informations de l'utilisateur
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        cursor.execute("SELECT nom FROM users WHERE id = %s", (flask_session['user_id'],))
+        user = cursor.fetchone()
+        
+        # Récupérer les informations du véhicule
+        cursor.execute("SELECT modele FROM vehicules WHERE id = %s", (vehicule_id,))
+        vehicule = cursor.fetchone()
+        
+        # Créer le nom du fichier
+        filename = f"{user['nom']}_{vehicule['modele']}.pdf"
+        s3_url = upload_pdf_to_s3(pdf_file, filename)
+        
+        if s3_url:
+            return jsonify({"url": s3_url}), 200
+        else:
+            return jsonify({"error": "Erreur lors de l'upload"}), 500
+            
+    except Exception as e:
+        print(f"Erreur: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
 
 # Gestion des erreurs
 @api.errorhandler(Exception)
