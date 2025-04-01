@@ -10,12 +10,11 @@ M-Motors est une application web qui permet aux utilisateurs de vendre, acheter 
 ### Fonctionnalités disponibles
 - Création de compte et authentification.
 - Ajout, modification et suppression d'annonces de véhicules.
-- Upload et affichage d'images en local.
+- Sauvegarde d'images et de devis dans le cloud.
 - Recherche et filtrage des véhicules.
 - Gestion de profil utilisateur.
 
 ### Limitations connues
-- Les images sont stockées localement (pas de stockage cloud).
 - Pas de déploiement en production.
 - Chatbot non intégré.
 
@@ -66,17 +65,13 @@ M-Motors est une application web qui permet aux utilisateurs de vendre, acheter 
 Nous avons tenté de déployer l'application avec :
 - AWS Lightsail pour le backend.
 - AWS Amplify pour le frontend.
-Nous avons tenté d'utiliser :
-- AWS S3 pour le stockage des images.
 
 ### Problèmes rencontrés
 - Problèmes de configuration avec Lightsail.
 - Problèmes de configuration avec Amplify.
-- Accès IAM limités pour S3 ce qui nous empêche de stocker les images sur AWS et de s'y connecter.
 
 ## Fonctionnalités prévues mais non implémentées
 - Intégration d'un chatbot avec Ollama(problème de configuration IAM).
-- Stockage des images sur AWS S3(problème de configuration IAM).
 - Déploiement complet sur AWS.
 
 ## Configuration requise
@@ -91,6 +86,10 @@ PG_PORT=5432
 PG_DB=groupe4
 PG_USER=postgres
 PG_PASSWORD=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=eu-west-3
+S3_BUCKET=groupe4mmotors
 \```
 
 ### Frontend (config.js)
