@@ -318,6 +318,83 @@ def internal_error(error):
         "message": "Une erreur interne s'est produite"
     }), 500
 
+@api.route('/me', methods=['GET'])
+def get_user_profile():
+    try:
+        if 'user_id' not in flask_session:
+            return jsonify({"error": "Utilisateur non connecté"}), 401
+
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute("""
+            SELECT id, nom, prenom, email 
+            FROM users 
+            WHERE id = %s
+        """, (flask_session['user_id'],))
+        
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        return jsonify({
+            "id": user['id'],
+            "nom": user['nom'],
+            "prenom": user['prenom'],
+            "email": user['email']
+        })
+
+    except Exception as e:
+        print(f"Erreur dans get_user_profile: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+
+@api.route('/user/<int:user_id>', methods=['GET'])
+def get_user_details(user_id):
+    try:
+        # Vérifier si l'utilisateur est connecté
+        if 'user_id' not in flask_session:
+            return jsonify({"error": "Utilisateur non connecté"}), 401
+            
+        # Vérifier si l'utilisateur demande ses propres informations
+        if int(flask_session['user_id']) != user_id:
+            return jsonify({"error": "Accès non autorisé"}), 403
+            
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute("""
+            SELECT id, nom, prenom, email 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+        
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+            
+        return jsonify({
+            "id": user['id'],
+            "nom": user['nom'],
+            "prenom": user['prenom'],
+            "email": user['email']
+        })
+        
+    except Exception as e:
+        print(f"Erreur dans get_user_details: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+
 # Enregistrement du Blueprint
 app.register_blueprint(api)
 

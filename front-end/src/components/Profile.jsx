@@ -6,12 +6,29 @@ import { API_URL, STATIC_URL } from '../config';
 function Profile() {
   const [vehicules, setVehicules] = useState([]);
   const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   const [user, setUser] = useState({
     nom: "",
     prenom: "",
     email: "",
   });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/check-login`, {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserData(data);
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {

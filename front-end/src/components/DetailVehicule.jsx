@@ -1,160 +1,212 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { API_URL, STATIC_URL } from '../config';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 function DetailVehicule() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [vehicule, setVehicule] = useState(null);
   const [erreur, setErreur] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const fetchVehicule = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/vehicules/${id}`, {
+        // Vérifier d'abord si l'utilisateur est connecté
+        const checkLoginResponse = await fetch(`${API_URL}/check-login`, {
           credentials: 'include'
         });
 
-        if (!response.ok) {
+        if (!checkLoginResponse.ok) {
+          navigate('/login');
+          return;
+        }
+
+        const loginInfo = await checkLoginResponse.json();
+        console.log("Données de connexion:", loginInfo);
+
+        if (!loginInfo.isLoggedIn) {
+          navigate('/login');
+          return;
+        }
+
+        // Maintenant, récupérer les informations détaillées de l'utilisateur
+        const userDetailResponse = await fetch(`${API_URL}/user/${loginInfo.user_id}`, {
+          credentials: 'include'
+        });
+
+        if (!userDetailResponse.ok) {
+          throw new Error('Erreur lors de la récupération des détails utilisateur');
+        }
+
+        const userDetails = await userDetailResponse.json();
+        console.log("Détails utilisateur:", userDetails);
+        setUserData(userDetails);
+
+        // Récupérer les détails du véhicule
+        const vehiculeResponse = await fetch(`${API_URL}/vehicules/${id}`, {
+          credentials: 'include'
+        });
+
+        if (!vehiculeResponse.ok) {
           throw new Error('Erreur lors de la récupération du véhicule');
         }
 
-        const data = await response.json();
-        setVehicule(data);
+        const vehiculeData = await vehiculeResponse.json();
+        setVehicule(vehiculeData);
       } catch (error) {
         console.error('Erreur:', error);
         setErreur(error.message);
       }
     };
 
-    fetchVehicule();
-  }, [id]);
+    fetchData();
+  }, [id, navigate]);
 
   const generatePDF = async () => {
     try {
-        const doc = new jsPDF();
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(20);
-        doc.setTextColor(41, 128, 185);
-        doc.text("BUY AND RIDE", 105, 15, { align: "center" });
+      if (!userData) {
+        throw new Error('Informations utilisateur non disponibles');
+      }
 
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Devis Véhicule", 105, 25, { align: "center" });
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text(
-            `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
-                `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
-                'M-Motors'}`,
-            15,
-            35
-        );
-        doc.text(
-            `Acheteur: ${sessionStorage.getItem('userPrenom')} ${sessionStorage.getItem('userNom')}`,
-            15,
-            42
-        );
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 49);
+      const doc = new jsPDF();
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(41, 128, 185);
+      doc.text("BUY AND RIDE", 105, 15, { align: "center" });
 
-        autoTable(doc, {
-            startY: 45,
-            head: [["Caractéristiques", "Détails"]],
-            body: [
-                ["Marque", vehicule.marque],
-                ["Modèle", vehicule.modele],
-                ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
-                ["Kilométrage", `${vehicule.km} km`],
-                ["Énergie", vehicule.energie],
-                ["Type", vehicule.type ? 'À vendre' : 'À louer'],
-            ],
-            theme: "striped",
-            headStyles: {
-                fillColor: [41, 128, 185],
-                textColor: [255, 255, 255],
-                fontSize: 10,
-                fontStyle: "bold",
-            },
-            bodyStyles: {
-                fontSize: 10,
-            },
-            alternateRowStyles: {
-                fillColor: [240, 240, 240],
-            },
-            margin: { left: 15, right: 15 },
-        });
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Devis Véhicule", 105, 25, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+          `Vendeur: ${vehicule.vendeur_prenom && vehicule.vendeur_nom ? 
+              `${vehicule.vendeur_prenom} ${vehicule.vendeur_nom}` : 
+              'M-Motors'}`,
+          15,
+          35
+      );
 
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 10);
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
-            maxWidth: 180,
-        });
+      // Vérifier la structure des données utilisateur
+      console.log("Données utilisateur pour le PDF:", userData);
+      
+      // Adapter selon la structure réelle des données
+      const nomAcheteur = userData.user ? `${userData.user.prenom} ${userData.user.nom}` : 
+                         (userData.prenom && userData.nom) ? `${userData.prenom} ${userData.nom}` : 
+                         'Non spécifié';
+      
+      doc.text(
+          `Acheteur: ${nomAcheteur}`,
+          15,
+          42
+      );
 
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("Conditions du devis", 15, doc.lastAutoTable.finalY + 50);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 49);
 
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        const conditions = [
-            "• Ce devis est valable 30 jours à compter de sa date d'émission",
-            "• Prix indiqué hors frais d'immatriculation et de mise en route",
-            "• Garantie selon conditions en vigueur",
-            "• Photos non contractuelles",
-        ];
+      autoTable(doc, {
+          startY: 45,
+          head: [["Caractéristiques", "Détails"]],
+          body: [
+              ["Marque", vehicule.marque],
+              ["Modèle", vehicule.modele],
+              ["Prix", `${vehicule.prix} ${vehicule.type ? '€' : '€/mois'}`],
+              ["Kilométrage", `${vehicule.km} km`],
+              ["Énergie", vehicule.energie],
+              ["Type", vehicule.type ? 'À vendre' : 'À louer'],
+          ],
+          theme: "striped",
+          headStyles: {
+              fillColor: [41, 128, 185],
+              textColor: [255, 255, 255],
+              fontSize: 10,
+              fontStyle: "bold",
+          },
+          bodyStyles: {
+              fontSize: 10,
+          },
+          alternateRowStyles: {
+              fillColor: [240, 240, 240],
+          },
+          margin: { left: 15, right: 15 },
+      });
 
-        conditions.forEach((condition, index) => {
-            doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + (index * 7));
-        });
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Description du véhicule", 15, doc.lastAutoTable.finalY + 10);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(vehicule.description, 15, doc.lastAutoTable.finalY + 20, {
+          maxWidth: 180,
+      });
 
-        doc.text("Signature du vendeur:", 15, 250);
-        doc.text("Signature de l'acheteur:", 120, 250);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Conditions du devis", 15, doc.lastAutoTable.finalY + 50);
 
-        doc.setFontSize(8);
-        doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
-            align: "center",
-        });
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const conditions = [
+          "• Ce devis est valable 30 jours à compter de sa date d'émission",
+          "• Prix indiqué hors frais d'immatriculation et de mise en route",
+          "• Garantie selon conditions en vigueur",
+          "• Photos non contractuelles",
+      ];
 
-        const pdfBlob = doc.output('blob');
-        
-        const formData = new FormData();
-        const fileName = `${sessionStorage.getItem('userNom')}_${vehicule.modele}.pdf`;
-        formData.append('pdf', new Blob([pdfBlob], { type: 'application/pdf' }), fileName);
-        formData.append('vehicule_id', vehicule.id);
+      conditions.forEach((condition, index) => {
+          doc.text(condition, 15, doc.lastAutoTable.finalY + 60 + (index * 7));
+      });
 
-        console.log('Tentative d\'envoi du devis...');
+      doc.text("Signature du vendeur:", 15, 250);
+      doc.text("Signature de l'acheteur:", 120, 250);
 
-        const response = await fetch(`${API_URL}/api/upload-devis`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-            },
-            body: formData
-        });
+      doc.setFontSize(8);
+      doc.text("Buy And Ride - Tous droits réservés", 105, 280, {
+          align: "center",
+      });
 
-        console.log('Réponse reçue:', response.status);
+      const pdfBlob = doc.output('blob');
+      
+      const formData = new FormData();
+      // Adapter le nom du fichier selon la structure
+      const nomFichier = userData.user ? `${userData.user.nom}_${vehicule.modele}.pdf` :
+                        userData.nom ? `${userData.nom}_${vehicule.modele}.pdf` :
+                        `devis_${vehicule.modele}.pdf`;
+      
+      formData.append('pdf', new Blob([pdfBlob], { type: 'application/pdf' }), nomFichier);
+      formData.append('vehicule_id', vehicule.id);
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erreur lors de l\'upload du devis');
-        }
+      console.log('Tentative d\'envoi du devis...');
 
-        const data = await response.json();
-        console.log('Devis uploadé avec succès:', data.url);
-        
-        doc.save(fileName);
-        
-        alert('Le devis a été généré et sauvegardé avec succès !');
+      const response = await fetch(`${API_URL}/api/upload-devis`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+              'Accept': 'application/json',
+          },
+          body: formData
+      });
+
+      console.log('Réponse reçue:', response.status);
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erreur lors de l\'upload du devis');
+      }
+
+      const data = await response.json();
+      console.log('Devis uploadé avec succès:', data.url);
+      
+      doc.save(nomFichier);
+      
+      alert('Le devis a été généré et sauvegardé avec succès !');
     } catch (error) {
-        console.error('Erreur détaillée:', error);
-        alert(`Erreur lors de la génération du devis: ${error.message}`);
+      console.error('Erreur détaillée:', error);
+      alert(`Erreur lors de la génération du devis: ${error.message}`);
     }
   };
 
