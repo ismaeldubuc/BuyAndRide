@@ -1,17 +1,13 @@
 import requests
-from pdf_handler import extract_text_from_files_in_folder
 
-def ask_ollama(question):
-    """ Envoie la question à Ollama et retourne la réponse. """
+def ask_ollama(question, context):
+    """ Envoie la question et le contexte à Ollama et retourne la réponse. """
     url = "http://localhost:11434/api/generate"
     
-    # Récupérer le contexte des fichiers PDF
-    folder_path = "s3_downloads"
-    context = extract_text_from_files_in_folder(folder_path)
-    
+    # Préparer le prompt avec le texte extrait des PDF
     prompt = f"""
     Tu es une IA spécialisée en extraction d'informations depuis des documents.
-    Voici le contenu des devis extraits depuis S3 :
+    Voici le contenu d'un fichier PDF extrait depuis S3 :
     
     {context}
     
@@ -23,7 +19,7 @@ def ask_ollama(question):
     """
     
     payload = {
-        "model": "mistral",
+        "model": "mistral",  # Essaie avec llama2, gemma ou autre si nécessaire
         "prompt": prompt,
         "stream": False
     }
@@ -34,4 +30,4 @@ def ask_ollama(question):
         return response.json().get("response", "Pas de réponse.")
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête à Ollama : {e}")
-        return "Je suis désolé, je ne peux pas répondre pour le moment. Veuillez réessayer plus tard."
+        return "Erreur de connexion à Ollama."

@@ -436,13 +436,6 @@ def add_vehicule():
         if 'conn' in locals():
             conn.close()
 
-        return jsonify({"message": "Véhicule ajouté avec succès", "vehicule_id": vehicule_id}), 201
-
-    except Exception as e:
-        print(f"Erreur : {e}")
-        return jsonify({"error": str(e)}), 500
-
-
 def get_vehicule(id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=DictCursor)
@@ -750,3 +743,93 @@ def upload_pdf_to_s3(pdf_data, filename):
     except Exception as e:
         print(f"Erreur lors de l'upload du PDF vers S3: {str(e)}")
         return None
+
+def chat():
+    try:
+        data = request.get_json()
+        question = data.get('question')
+        
+        if not question:
+            return jsonify({"error": "Aucune question fournie"}), 400
+        
+        # Appeler la fonction ask_ollama pour obtenir la réponse
+        response = ask_ollama(question)
+        
+        return jsonify({"response": response}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def get_user_profile():
+    try:
+        if 'user_id' not in flask_session:
+            return jsonify({"error": "Utilisateur non connecté"}), 401
+
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute("""
+            SELECT id, nom, prenom, email 
+            FROM users 
+            WHERE id = %s
+        """, (flask_session['user_id'],))
+        
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        return jsonify({
+            "id": user['id'],
+            "nom": user['nom'],
+            "prenom": user['prenom'],
+            "email": user['email']
+        })
+
+    except Exception as e:
+        print(f"Erreur dans get_user_profile: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+
+def get_user_details(user_id):
+    try:
+        # Vérifier si l'utilisateur est connecté
+        if 'user_id' not in flask_session:
+            return jsonify({"error": "Utilisateur non connecté"}), 401
+            
+        # Vérifier si l'utilisateur demande ses propres informations
+        if int(flask_session['user_id']) != user_id:
+            return jsonify({"error": "Accès non autorisé"}), 403
+            
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        
+        cursor.execute("""
+            SELECT id, nom, prenom, email 
+            FROM users 
+            WHERE id = %s
+        """, (user_id,))
+
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+            
+        return jsonify({
+            "id": user['id'],
+            "nom": user['nom'],
+            "prenom": user['prenom'],
+            "email": user['email']
+        })
+        
+    except Exception as e:
+        print(f"Erreur dans get_user_details: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
