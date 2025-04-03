@@ -1,10 +1,11 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, session
 from flask_bcrypt import Bcrypt
+
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil
+from fonction import register, login, profile, logout, create_vehicle, update_vehicle, delete_vehicle, get_vehicle , save_devis,list_vehicules,get_vehicule,add_vehicule,get_vehicle_by_id,update_etat_vehicule,get_achat_vehicule, get_louer_vehicule,filter_vehicules,get_marques,get_modeles, modif_profil, chat
 from dotenv import load_dotenv
 import os
 
@@ -12,11 +13,24 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Ajoutez une clé secrète pour JWT
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174"]}}, supports_credentials=True)
+
+# Ajoute un middleware pour les en-têtes CORS
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get('Origin')
+    if origin in ['http://localhost:5173', 'http://localhost:5174']:
+        response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -49,6 +63,10 @@ def login_route():
 @app.route('/profile', methods=['GET'])
 def profile_route():
     return profile()
+
+@app.route('/chat', methods=['POST'])
+def chat_route():
+    return chat()
 
 @app.route('/modif_profil', methods=['POST'])
 def modif_profil_route():
@@ -92,7 +110,44 @@ def get_vehicle_by_id_func(id):
 
 @app.route('/vehicules', methods=['POST'])
 def add_vehicule_route():
-   return add_vehicule()
+    user_id = session.get('user_id')
+    print(f"Session utilisateur : {user_id}")
+
+    if not user_id:
+        return jsonify({"error": "Utilisateur non connecté"}), 401
+
+    try:
+        # Récupération des données du formulaire
+        marque = request.form.get("marque")
+        modele = request.form.get("modele")
+        prix = request.form.get("prix")
+        photos = request.files.getlist("photos[]")  # Récupération des fichiers multiples
+
+        print(f"📝 Marque : {marque}, Modèle : {modele}, Prix : {prix}")
+        print(f"📸 Photos reçues : {[photo.filename for photo in photos]}")
+
+        # Vérifie si des fichiers ont été envoyés
+        if not photos:
+            return jsonify({"error": "Aucune photo envoyée"}), 400
+
+        # Sauvegarde des fichiers
+        photo_paths = []
+        for photo in photos:
+            if photo and allowed_file(photo.filename):  # Vérifie l'extension
+                filename = secure_filename(photo.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                photo.save(filepath)
+                photo_paths.append(filepath)
+
+        print(f"✅ Fichiers sauvegardés : {photo_paths}")
+
+        # Appel à ta fonction add_vehicule
+        return add_vehicule(user_id, marque, modele, prix, photo_paths)
+
+    except Exception as e:
+        print(f"💥 Erreur : {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/devis/<int:vehicule_id>', methods=['POST'])
 def save_devis_route(vehicule_id):
@@ -127,5 +182,7 @@ def get_marques_route():
 def get_modeles_route(marque):
     return get_modeles(marque)
 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
+

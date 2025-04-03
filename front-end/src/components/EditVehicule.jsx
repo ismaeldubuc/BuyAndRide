@@ -13,14 +13,26 @@ function EditVehicule() {
     description: "",
   });
   const [images, setImages] = useState([]);
+  const [existingPhotos, setExistingPhotos] = useState([]);
 
+  // 🚗 Récupérer les données du véhicule
   useEffect(() => {
     const fetchVehicule = async () => {
       try {
         const response = await fetch(`http://127.0.0.1:5000/vehicules/${id}`);
         const data = await response.json();
+
         if (response.ok) {
           setFormData(data);
+          setExistingPhotos(
+            [
+              data.photo1,
+              data.photo2,
+              data.photo3,
+              data.photo4,
+              data.photo5,
+            ].filter(Boolean)
+          );
         } else {
           console.error("Erreur lors de la récupération des données :", data);
         }
@@ -32,30 +44,39 @@ function EditVehicule() {
     fetchVehicule();
   }, [id]);
 
+  // 📝 Gérer les changements des champs
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 📸 Gérer l'ajout d'images
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files).slice(0, 5 - images.length);
     setImages([...images, ...files]);
   };
 
+  // 📨 Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
+
+    // Ajouter les données du formulaire
     Object.entries(formData).forEach(([key, value]) => {
       data.append(key, value);
     });
+
+    // Ajouter les nouvelles images
     images.forEach((image, index) => {
       data.append(`photo${index + 1}`, image);
     });
+
     try {
       const response = await fetch(`http://127.0.0.1:5000/vehicules/${id}`, {
         method: "PUT",
         body: data,
         credentials: "include",
       });
+
       const result = await response.json();
       if (response.ok) {
         alert("Véhicule modifié avec succès !");
@@ -69,11 +90,13 @@ function EditVehicule() {
     }
   };
 
+  // 🚀 Interface du formulaire
   return (
     <form
       onSubmit={handleSubmit}
       className="flex flex-col items-center justify-center w-full gap-5 p-5 mt-5"
     >
+      {/* Zone d'upload d'images */}
       <label
         htmlFor="dropzone-file"
         className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
@@ -94,9 +117,26 @@ function EditVehicule() {
           onChange={handleFileChange}
         />
       </label>
+
+      {/* Aperçu des images existantes */}
+      <div className="flex flex-col gap-2 w-full">
+        <h1>Images existantes :</h1>
+        <div className="flex gap-2">
+          {existingPhotos.map((photo, index) => (
+            <img
+              key={index}
+              src={`http://127.0.0.1:5000/uploads/${photo}`}
+              alt={`Photo ${index}`}
+              className="w-24 h-24 object-cover rounded-lg border"
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Aperçu des nouvelles images */}
       <div className="flex flex-col gap-2">
-        <h1>Images téléchargées :</h1>
-        <div className="flex">
+        <h1>Nouvelles images :</h1>
+        <div className="flex gap-2">
           {images.map((image, index) => (
             <img
               key={index}
@@ -108,61 +148,33 @@ function EditVehicule() {
         </div>
       </div>
 
+      {/* Champs du formulaire */}
       <div className="p-4 flex flex-col gap-4 w-full">
-        <input
-          type="text"
-          name="marque"
-          placeholder="Marque"
-          value={formData.marque}
-          onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
-        />
-        <input
-          type="text"
-          name="modele"
-          placeholder="Modèle"
-          value={formData.modele}
-          onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
-        />
-        <input
-          type="number"
-          name="prix"
-          placeholder="Prix (€)"
-          value={formData.prix}
-          onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
-        />
-        <input
-          type="text"
-          name="kilometrage"
-          placeholder="Kilométrage (km)"
-          value={formData.kilometrage}
-          onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
-        />
-        <input
-          type="text"
-          name="energie"
-          placeholder="Type d'énergie"
-          value={formData.energie}
-          onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
-        />
-        <input
-          type="text"
-          name="type"
-          placeholder="Type de véhicule"
-          value={formData.type}
-          onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
-        />
+        {[
+          { name: "marque", placeholder: "Marque" },
+          { name: "modele", placeholder: "Modèle" },
+          { name: "prix", placeholder: "Prix (€)" },
+          { name: "kilometrage", placeholder: "Kilométrage (km)" },
+          { name: "energie", placeholder: "Type d'énergie" },
+          { name: "type", placeholder: "Type de véhicule" },
+        ].map(({ name, placeholder }) => (
+          <input
+            key={name}
+            type="text"
+            name={name}
+            placeholder={placeholder}
+            value={formData[name] || ""}
+            onChange={handleChange}
+            className="p-3 rounded-lg focus:outline-indigo-600 shadow-md border border-gray-300"
+          />
+        ))}
+
         <textarea
           name="description"
           placeholder="Description..."
           value={formData.description}
           onChange={handleChange}
-          className="p-3 rounded-lg focus:outline-indigo-600 h-96 shadow-md border border-gray-300"
+          className="p-3 rounded-lg focus:outline-indigo-600 h-32 shadow-md border border-gray-300"
         ></textarea>
       </div>
 

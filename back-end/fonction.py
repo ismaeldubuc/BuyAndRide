@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, session, send_from_directory
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
+from pdf_handler import extract_text_from_files_in_folder
+from ollama_handler import ask_ollama
 import psycopg2
 from psycopg2.extras import DictCursor
 import os
@@ -20,7 +22,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-app = Flask(__name__)
+
 # Configure CORS
 CORS(app, resources={r"/api/*": {
     "origins": "http://localhost:5173",  # Spécifiez ici l'origine exacte de votre front-end
@@ -289,24 +291,54 @@ def list_vehicules():
         cursor.close()
         conn.close()
 
-def add_vehicule():
-    if 'user_id' not in session:
-        return jsonify({"error": "Authentication required"}), 401
-    data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
+def add_vehicule(user_id):
     try:
-        sql = "INSERT INTO vehicules (user_id, marque, modele, prix, kilometrage, energie, type, description, photo1, photo2, photo3, photo4, photo5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        values = (session['user_id'], data['marque'], data['modele'], data['prix'], data['kilometrage'], data['energie'], data['type'], data['description'], data['photo1'], data['photo2'], data['photo3'], data['photo4'], data['photo5'])
-        cursor.execute(sql, values)
+        marque = request.form.get('marque')
+        modele = request.form.get('modele')
+        prix = request.form.get('prix')
+        kilometrage = request.form.get('kilometrage')
+        energie = request.form.get('energie')
+        type_vehicule = request.form.get('type')
+        description = request.form.get('description')
+
+        if not all([marque, modele, prix, kilometrage, energie, type_vehicule, description]):
+            return jsonify({"error": "Tous les champs sont requis"}), 400
+
+        # Gestion des photos
+        photos = []
+        for i in range(1, 6):
+            photo = request.files.get(f'photo{i}')
+            if photo:
+                filename = f"{marque}_{modele}_{i}.jpg"
+                photo_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                photo.save(photo_path)
+                photos.append(filename)
+
+        # Insertion en base de données
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Insère le véhicule
+        cursor.execute("""
+            INSERT INTO vehicules (marque, modele, prix, km, energie, type, description, photo1, photo2, photo3, photo4, photo5)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+        """, (marque, modele, prix, kilometrage, energie, type_vehicule, description, *photos))
+
+        vehicule_id = cursor.fetchone()[0]
+
+        # Lien avec l'utilisateur
+        cursor.execute("INSERT INTO uservehicule (user_id, vehicule_id) VALUES (%s, %s)", (user_id, vehicule_id))
+
         conn.commit()
-        return jsonify({"message": "Vehicle added successfully"}), 201
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
         cursor.close()
         conn.close()
+
+        return jsonify({"message": "Véhicule ajouté avec succès", "vehicule_id": vehicule_id}), 201
+
+    except Exception as e:
+        print(f"Erreur : {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 def get_vehicule(id):
     conn = get_db_connection()
@@ -460,6 +492,22 @@ def get_modeles(marque):
     finally:
         cursor.close()
         conn.close()
+    
+@app.route('/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        question = data.get('question')
+        
+        if not question:
+            return jsonify({"error": "Aucune question fournie"}), 400
+        
+        # Appeler la fonction ask_ollama pour obtenir la réponse
+        response = ask_ollama(question)
+        
+        return jsonify({"response": response}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def filter_vehicles():
     try:
@@ -526,3 +574,5 @@ def filter_vehicles():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
+
+
