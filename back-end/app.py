@@ -2,6 +2,7 @@ import psycopg2
 import psycopg2.extras
 from flask import Flask, request, jsonify, send_from_directory, Blueprint, session as flask_session
 from flask_bcrypt import Bcrypt
+
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import fonction
@@ -27,6 +28,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Ajoutez une clé secrète pour JWT
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
@@ -101,6 +103,19 @@ def profile_route():
     return fonction.profile()
 
 @api.route("/create-vehicle", methods=["POST"])
+@app.route('/chat', methods=['POST'])
+def chat_route():
+    return chat()
+
+@app.route('/modif_profil', methods=['POST'])
+def modif_profil_route():
+    return modif_profil()
+
+@app.route('/logout', methods=['POST'])
+def logout_route():
+    return logout()
+
+@app.route("/api/create-vehicle", methods=["POST"])
 def create_vehicle_func():
     return fonction.create_vehicle()
 
@@ -429,3 +444,4 @@ def update_etat_vehicule_route():
 if __name__ == "__main__":
     logging.info("Starting Flask application...")
     app.run(host="0.0.0.0", port=8000, debug=True)
+

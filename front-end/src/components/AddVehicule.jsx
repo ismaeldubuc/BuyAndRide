@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Header from "./Header";
-import { API_URL } from '../config';
+import { API_URL } from "../config";
 
 function Annonce() {
   const [formData, setFormData] = useState({
@@ -32,59 +32,62 @@ function Annonce() {
     e.preventDefault();
 
     try {
-        // Première requête pour envoyer les données du véhicule
-        const vehiculeResponse = await fetch(`${API_URL}/vehicules`, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(formData)
+      // Première requête pour envoyer les données du véhicule
+      const vehiculeResponse = await fetch(`${API_URL}/vehicules`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
+
+      if (!vehiculeResponse.ok) {
+        const errorData = await vehiculeResponse.json();
+        throw new Error(
+          errorData.error || "Erreur lors de la création du véhicule"
+        );
+      }
+
+      const vehiculeResult = await vehiculeResponse.json();
+
+      // Si des images sont présentes, les envoyer dans une seconde requête
+      if (images.length > 0) {
+        const imageData = new FormData();
+        images.forEach((image, index) => {
+          imageData.append(`photo${index + 1}`, image);
+        });
+        imageData.append("vehicule_id", vehiculeResult.id);
+
+        const imageResponse = await fetch(`${API_URL}/upload-images`, {
+          method: "POST",
+          credentials: "include",
+          body: imageData,
         });
 
-        if (!vehiculeResponse.ok) {
-            const errorData = await vehiculeResponse.json();
-            throw new Error(errorData.error || "Erreur lors de la création du véhicule");
+        if (!imageResponse.ok) {
+          const imageError = await imageResponse.json();
+          throw new Error(
+            imageError.error || "Erreur lors de l'upload des images"
+          );
         }
+      }
 
-        const vehiculeResult = await vehiculeResponse.json();
-
-        // Si des images sont présentes, les envoyer dans une seconde requête
-        if (images.length > 0) {
-            const imageData = new FormData();
-            images.forEach((image, index) => {
-                imageData.append(`photo${index + 1}`, image);
-            });
-            imageData.append('vehicule_id', vehiculeResult.id);
-
-            const imageResponse = await fetch(`${API_URL}/upload-images`, {
-                method: "POST",
-                credentials: 'include',
-                body: imageData
-            });
-
-            if (!imageResponse.ok) {
-                const imageError = await imageResponse.json();
-                throw new Error(imageError.error || "Erreur lors de l'upload des images");
-            }
-        }
-
-        alert("Véhicule ajouté avec succès !");
-        // Réinitialiser le formulaire
-        setFormData({
-            marque: "",
-            modele: "",
-            prix: "",
-            km: "",
-            energie: "",
-            type: "",
-            description: "",
-        });
-        setImages([]);
-
+      alert("Véhicule ajouté avec succès !");
+      // Réinitialiser le formulaire
+      setFormData({
+        marque: "",
+        modele: "",
+        prix: "",
+        km: "",
+        energie: "",
+        type: "",
+        description: "",
+      });
+      setImages([]);
     } catch (error) {
-        console.error("Erreur lors de l'envoi des données :", error);
-        alert(error.message || "Une erreur est survenue !");
+      console.error("Erreur lors de l'envoi des données :", error);
+      alert(error.message || "Une erreur est survenue !");
     }
   };
 
@@ -121,12 +124,14 @@ function Annonce() {
             {images.map((image, index) => (
               <div key={index} className="relative">
                 <img
-                  src={image instanceof File ? URL.createObjectURL(image) : image}
+                  src={
+                    image instanceof File ? URL.createObjectURL(image) : image
+                  }
                   alt={`Preview ${index + 1}`}
                   className="h-24 w-24 object-cover rounded-lg"
                   onError={(e) => {
                     console.error("Erreur de chargement de l'image:", image);
-                    e.target.src = '/src/assets/placeholder.png';
+                    e.target.src = "/src/assets/placeholder.png";
                   }}
                 />
                 <button

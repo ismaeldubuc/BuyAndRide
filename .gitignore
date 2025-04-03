@@ -58,3 +58,4 @@ requirements.txt.lock
 
 # Fichiers d'environnement
 /back-end/.env
+/back-end/s3_downloads

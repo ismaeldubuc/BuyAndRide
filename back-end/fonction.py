@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify, session as flask_session, send_from_d
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required,get_jwt_identity
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
+from pdf_handler import extract_text_from_files_in_folder
+from ollama_handler import ask_ollama
 import psycopg2
 from psycopg2.extras import DictCursor
 import os
@@ -35,6 +37,14 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # Extensions autorisées
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+# Configure CORS
+CORS(app, resources={r"/api/*": {
+    "origins": "http://localhost:5173",  # Spécifiez ici l'origine exacte de votre front-end
+    "methods": ["GET", "POST", "PUT", "DELETE"],  # Les méthodes HTTP autorisées
+    "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],  # Les en-têtes autorisés
+    "supports_credentials": True  # Permet les cookies cross-origin, les en-têtes d'autorisation, etc.
+}})
 
 # Configuration S3
 s3_client = boto3.client('s3',
@@ -425,6 +435,13 @@ def add_vehicule():
             cursor.close()
         if 'conn' in locals():
             conn.close()
+
+        return jsonify({"message": "Véhicule ajouté avec succès", "vehicule_id": vehicule_id}), 201
+
+    except Exception as e:
+        print(f"Erreur : {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 def get_vehicule(id):
     conn = get_db_connection()
