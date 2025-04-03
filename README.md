@@ -23,7 +23,6 @@ M-Motors est une application web qui permet aux utilisateurs de vendre, acheter 
 - Python 3.x
 - Node.js
 - PostgreSQL
-- Redis (optionnel, pour la gestion des sessions en production)
 
 ### Backend (Flask)
 1. Cloner le repository.
@@ -58,7 +57,10 @@ M-Motors est une application web qui permet aux utilisateurs de vendre, acheter 
 ## Utilisation
 1. Créer un compte utilisateur.
 2. Se connecter.
-3. Pour ajouter un véhicule, cliquer sur "Vendre", remplir les informations du véhicule et ajouter jusqu'à 5 photos. Les photos seront stockées localement dans `back-end/static/uploads/` et visibles dans les annonces.
+3. Pour ajouter un véhicule, cliquer sur "Vendre", remplir les informations du véhicule et ajouter jusqu'à 5 photos.
+4. Se balader dans louer et acheter pour voir les véhicules disponibles
+5. Aller dans les détails d'un véhicule pour demander un devis
+6. Aller sur adresselocalhost/chatia pour poser des questions a notre ia ollama sur le nombre de devis de monsieur sliti par exemple 
 
 ## Tentatives de déploiement
 Nous avons tenté de déployer l'application avec :
