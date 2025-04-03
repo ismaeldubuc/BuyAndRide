@@ -1,4 +1,3 @@
-
 # M-Motors - Plateforme de Vente et Location de Véhicules
 
 ## Description
@@ -13,10 +12,10 @@ M-Motors est une application web qui permet aux utilisateurs de vendre, acheter 
 - Sauvegarde d'images et de devis dans le cloud.
 - Recherche et filtrage des véhicules.
 - Gestion de profil utilisateur.
+- Chat Ollama, poser des questions sur les devis clients (/chatia)
 
 ### Limitations connues
 - Pas de déploiement en production.
-- Chatbot non intégré.
 
 ## Installation et configuration
 
@@ -69,10 +68,6 @@ Nous avons tenté de déployer l'application avec :
 ### Problèmes rencontrés
 - Problèmes de configuration avec Lightsail.
 - Problèmes de configuration avec Amplify.
-
-## Fonctionnalités prévues mais non implémentées
-- Intégration d'un chatbot avec Ollama(problème de configuration IAM).
-- Déploiement complet sur AWS.
 
 ## Configuration requise
 
