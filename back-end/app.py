@@ -38,7 +38,7 @@ api = Blueprint('api', __name__, url_prefix='/api')
 
 # Configuration CORS
 CORS(app, resources={
-    r"/*": {
+    r"/api/*": {
         "origins": ["http://localhost:5173"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
@@ -108,7 +108,12 @@ def create_vehicle_func():
 @api.route('/chat', methods=['POST', 'OPTIONS'])
 def chat_route():
     if request.method == 'OPTIONS':
-        return '', 200
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response, 200
     return fonction.chat()
 
 @api.route('/modif_profil', methods=['POST'])
@@ -124,8 +129,8 @@ def get_vehicules_route():
     return fonction.get_vehicules()
 
 @api.route('/vehicules/<int:id>', methods=['GET'])
-def get_vehicle(id):
-    return fonction.get_vehicle(id)
+def get_vehicule_route(id):
+    return fonction.get_vehicule_by_id(id)
 
 @api.route('/static/uploads/<path:filename>')
 def serve_image(filename):
@@ -187,8 +192,15 @@ def get_modeles_route(marque):
 def upload_images_route():
     return fonction.upload_images()
 
-@api.route('/api/upload-devis', methods=['POST', 'OPTIONS'])
-def upload_devis():
+@api.route('/upload-devis', methods=['POST', 'OPTIONS'])
+def upload_devis_route():
+    if request.method == 'OPTIONS':
+        response = jsonify()
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response, 200
     return fonction.upload_devis()
 
 @api.route('/health')

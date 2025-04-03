@@ -193,12 +193,9 @@ function DetailVehicule() {
 
       console.log("Tentative d'envoi du devis...");
 
-      const response = await fetch(`${API_URL}/api/upload-devis`, {
+      const response = await fetch(`${API_URL}/upload-devis`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          Accept: "application/json",
-        },
         body: formData,
       });
 

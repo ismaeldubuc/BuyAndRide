@@ -138,16 +138,18 @@ def get_vehicle():
     finally:
         cursor.close()
         
-def get_vehicle_by_id(id):
+def get_vehicule_by_id(id):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor = conn.cursor(cursor_factory=DictCursor)
         
-        # Requête pour obtenir un véhicule spécifique
+        # Requête modifiée pour utiliser la table uservehicule
         query = """
-            SELECT * 
-            FROM vehicules 
-            WHERE id = %s
+            SELECT v.*, u.nom as vendeur_nom, u.prenom as vendeur_prenom 
+            FROM vehicules v 
+            LEFT JOIN uservehicule uv ON v.id = uv.id_vehicule
+            LEFT JOIN users u ON uv.id_user = u.id
+            WHERE v.id = %s
         """
         
         cursor.execute(query, (id,))
@@ -163,25 +165,27 @@ def get_vehicle_by_id(id):
         if 'prix' in vehicule_dict:
             vehicule_dict['prix'] = float(vehicule_dict['prix'])
             
-        # Transformer les chemins d'images
-        for i in range(1, 6):
-            photo_key = f'photo{i}'
-            if vehicule_dict.get(photo_key):
-                vehicule_dict[photo_key] = os.path.join('uploads', os.path.basename(vehicule_dict[photo_key]))
+        # Ne pas modifier les URLs S3
+        # Les images sont déjà des URLs S3 complètes
 
         return jsonify(vehicule_dict)
 
     except Exception as e:
-        print(f"Erreur dans get_vehicle_by_id: {str(e)}")  # Pour le débogage
+        print(f"Erreur dans get_vehicule_by_id: {str(e)}")  # Pour le débogage
         return jsonify({
             "error": str(e),
-            "message": "Erreur lors de la récupération du véhicule"
+            "message": "Erreur lors de la récupération du véhicule",
+            "details": {
+                "id": id,
+                "error_type": type(e).__name__,
+                "error_args": e.args
+            }
         }), 500
     finally:
         if 'cursor' in locals():
-            cursor.close()
+        cursor.close()
         if 'conn' in locals():
-            conn.close()
+        conn.close()
 
 def register():
     try:
@@ -193,10 +197,10 @@ def register():
         prenom = data.get('prenom')
         email = data.get('email')
         password = data.get('password')
-        
+
         if not all([nom, prenom, email, password]):
             return jsonify({"message": "Tous les champs sont requis"}), 400
-            
+
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
         
@@ -213,13 +217,13 @@ def register():
             "INSERT INTO users (nom, prenom, email, mdp) VALUES (%s, %s, %s, %s)",
             (nom, prenom, email, hashed_password)
         )
-        conn.commit()
+            conn.commit()
         
-        return jsonify({"message": "Inscription réussie"}), 201
+            return jsonify({"message": "Inscription réussie"}), 201
         
-    except Exception as e:
+        except Exception as e:
         return jsonify({"message": f"Erreur serveur: {str(e)}"}), 500
-    finally:
+        finally:
         if 'cursor' in locals():
             cursor.close()
         if 'conn' in locals():
@@ -228,18 +232,18 @@ def register():
 
 def login():
     try:
-        data = request.get_json()
+    data = request.get_json()
         if not data:
             return jsonify({"message": "Données JSON manquantes"}), 400
             
-        email = data.get('email')
+    email = data.get('email')
         password = data.get('password')
         
         if not email or not password:
             return jsonify({"message": "Email et mot de passe requis"}), 400
             
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=DictCursor)
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
         
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
@@ -257,9 +261,9 @@ def login():
         return jsonify({"message": f"Erreur serveur: {str(e)}"}), 500
     finally:
         if 'cursor' in locals():
-            cursor.close()
+        cursor.close()
         if 'conn' in locals():
-            conn.close()
+        conn.close()
 
 import logging
 
@@ -282,24 +286,24 @@ def profile():
         if 'user_id' not in flask_session:
             return jsonify({"error": "Utilisateur non connecté"}), 401
 
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=DictCursor)
+
         cursor.execute("SELECT nom, prenom, email FROM users WHERE id = %s", (flask_session['user_id'],))
         user = cursor.fetchone()
         
         if not user:
             return jsonify({"error": "Utilisateur non trouvé"}), 404
-            
+
         return jsonify([user['nom'], user['prenom'], user['email']]), 200
 
     except Exception as e:
         return jsonify({"error": f"Erreur serveur: {str(e)}"}), 500
     finally:
         if 'cursor' in locals():
-            cursor.close()
+        cursor.close()
         if 'conn' in locals():
-            conn.close()
+        conn.close()
 
 def modif_profil():
     try:
@@ -342,24 +346,24 @@ def modif_profil():
         """
 
         cursor.execute(query, tuple(params))
-        conn.commit()
+                conn.commit()
 
-        return jsonify({"message": "Profil mis à jour avec succès"}), 200
+                return jsonify({"message": "Profil mis à jour avec succès"}), 200
 
     except Exception as e:
         print(f"Erreur dans modif_profil: {str(e)}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'cursor' in locals():
-            cursor.close()
+        cursor.close()
         if 'conn' in locals():
-            conn.close()
+        conn.close()
 
 def logout():
     try:
         # Effacer la session
         flask_session.clear()
-        return jsonify({"message": "Déconnexion réussie"}), 200
+    return jsonify({"message": "Déconnexion réussie"}), 200
     except Exception as e:
         print(f"Erreur dans logout: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -500,7 +504,7 @@ def filter_vehicles():
         if type_vehicule:
             query += " AND type = %s"
             params.append(type_vehicule == 'true')
-            
+
         if marque:
             query += " AND marque = %s"
             params.append(marque)
@@ -752,11 +756,41 @@ def chat():
         if not question:
             return jsonify({"error": "Aucune question fournie"}), 400
         
-        # Appeler la fonction ask_ollama pour obtenir la réponse
-        response = ask_ollama(question)
+        # Extraire le texte des PDFs de S3
+        try:
+            # Créer un dossier temporaire pour les PDFs
+            temp_folder = os.path.join('static', 'temp_pdfs')
+            if not os.path.exists(temp_folder):
+                os.makedirs(temp_folder)
+            
+            # Télécharger les PDFs de S3
+            bucket_name = os.getenv('S3_BUCKET')
+            response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix='devis/')
+            
+            if 'Contents' in response:
+                for obj in response['Contents']:
+                    if obj['Key'].endswith('.pdf'):
+                        local_path = os.path.join(temp_folder, os.path.basename(obj['Key']))
+                        s3_client.download_file(bucket_name, obj['Key'], local_path)
+            
+            # Extraire le texte des PDFs
+            context = extract_text_from_files_in_folder(temp_folder)
+            
+            # Nettoyer le dossier temporaire
+            for file in os.listdir(temp_folder):
+                os.remove(os.path.join(temp_folder, file))
+            os.rmdir(temp_folder)
+            
+        except Exception as e:
+            print(f"Erreur lors de l'extraction des PDFs: {str(e)}")
+            context = "Aucun PDF trouvé dans S3."
+        
+        # Appeler la fonction ask_ollama avec la question et le contexte
+        response = ask_ollama(question, context)
         
         return jsonify({"response": response}), 200
     except Exception as e:
+        print(f"Erreur dans chat: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 def get_user_profile():
@@ -830,6 +864,53 @@ def get_user_details(user_id):
         return jsonify({"error": str(e)}), 500
     finally:
         if 'cursor' in locals():
-            cursor.close()
+        cursor.close()
         if 'conn' in locals():
+        conn.close()
+
+def upload_devis():
+    try:
+        if 'user_id' not in flask_session:
+            return jsonify({"error": "Utilisateur non connecté"}), 401
+
+        # Récupérer le fichier PDF et l'ID du véhicule depuis le formulaire
+        if 'pdf' not in request.files:
+            return jsonify({"error": "Aucun fichier PDF fourni"}), 400
+            
+        pdf_file = request.files['pdf']
+        vehicule_id = request.form.get('vehicule_id')
+        
+        if not vehicule_id:
+            return jsonify({"error": "ID du véhicule manquant"}), 400
+
+        # Générer un nom de fichier unique pour le devis
+        filename = f"devis_{vehicule_id}_{flask_session['user_id']}_{int(time.time())}.pdf"
+        
+        # Upload vers S3
+        s3_url = upload_pdf_to_s3(pdf_file.read(), filename)
+        if not s3_url:
+            return jsonify({"error": "Erreur lors de l'upload du devis vers S3"}), 500
+
+        # Enregistrer dans la base de données
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO pdf (id_vehicule, id_user, pdf, description)
+                VALUES (%s, %s, %s, %s)
+            """, (vehicule_id, flask_session['user_id'], s3_url, "Devis généré automatiquement"))
+            conn.commit()
+            return jsonify({
+                "message": "Devis enregistré avec succès",
+                "url": s3_url
+            }), 201
+        except Exception as e:
+            conn.rollback()
+            return jsonify({"error": str(e)}), 500
+        finally:
+            cursor.close()
             conn.close()
+
+    except Exception as e:
+        print(f"Erreur dans upload_devis: {str(e)}")
+        return jsonify({"error": str(e)}), 500

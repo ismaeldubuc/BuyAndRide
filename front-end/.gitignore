@@ -1,24 +1,74 @@
-# Logs
-logs
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask specific
+instance/
+.webassets-cache
+
+# Virtual Environment
+venv/
+ENV/
+.venv/
+env/
+
+# Logs and databases
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+*.sqlite
+*.db
 
-node_modules
-dist
-dist-ssr
-*.local
+# Local configuration
+config.py
+settings.local.py
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Uploads and media
+uploads/
+media/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+
+# Keep these files
+!front-end/package.json
+!front-end/package-lock.json
+!back-end/requirements.txt
+
+# Python package management
+pip-log.txt
+requirements.txt.lock
+
+# S3 downloads
+/back-end/s3_downloads/
+
+# Flask sessions
+/back-end/flask_session/
+
+# Front-end specific
+node_modules
+/node_modules
+*/node_modules
+/*/node_modules
+front-end/node_modules/
+back-end/node_modules/
